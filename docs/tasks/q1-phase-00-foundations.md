@@ -555,19 +555,19 @@ test `test_redis_broker_waits_for_jobs_without_socket_timeout`).
 - (TS side is completed in Task 0.7 once `apps/web` exists.)
 
 **Subtasks:**
-- [ ] 0.6.1 Implement `python -m app.scripts.export_openapi <path>`: builds the app with
+- [x] 0.6.1 Implement `python -m app.scripts.export_openapi <path>`: builds the app with
   `create_app(Settings(_env_file=None, database_url="postgresql+asyncpg://x/x", app_env="test",
   llm_provider="fake", stt_provider="fake", tts_provider="fake", pronunciation_provider="fake"))`
   (no DB connection needed — lifespan is not run), writes `json.dumps(app.openapi(), indent=2,
   sort_keys=True) + "\n"`.
-- [ ] 0.6.2 Test `tests/unit/test_export_openapi.py::test_export_writes_stable_json` — run twice to
+- [x] 0.6.2 Test `tests/unit/test_export_openapi.py::test_export_writes_stable_json` — run twice to
   temp files, contents identical, contains path `/api/v1/health`.
-- [ ] 0.6.3 Add operation ids: set `generate_unique_id_function=lambda route: route.name` in
+- [x] 0.6.3 Add operation ids: set `generate_unique_id_function=lambda route: route.name` in
   `create_app` so TS operation names are stable; name every route function uniquely.
-- [ ] 0.6.4 Commit: `feat(api): export openapi schema`
+- [x] 0.6.4 Commit: `feat(api): export openapi schema`
 
 **Acceptance criteria:**
-- [ ] `apps/api/openapi.json` is deterministic (no diff on re-run).
+- [x] `apps/api/openapi.json` is deterministic (no diff on re-run).
 
 ---
 

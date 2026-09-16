@@ -1,0 +1,588 @@
+{
+  "components": {
+    "schemas": {
+      "Dimension": {
+        "enum": [
+          "clarity",
+          "conciseness",
+          "structure",
+          "audience_fit",
+          "tone",
+          "confidence",
+          "grammar_vocabulary",
+          "fluency",
+          "pronunciation"
+        ],
+        "title": "Dimension",
+        "type": "string"
+      },
+      "EnglishLevel": {
+        "enum": [
+          "A2",
+          "B1",
+          "B2",
+          "C1",
+          "C2"
+        ],
+        "title": "EnglishLevel",
+        "type": "string"
+      },
+      "Goal": {
+        "enum": [
+          "interviews",
+          "meetings",
+          "stakeholders",
+          "code_review",
+          "presentations",
+          "writing"
+        ],
+        "title": "Goal",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthChecks": {
+        "properties": {
+          "database": {
+            "enum": [
+              "ok",
+              "unavailable"
+            ],
+            "title": "Database",
+            "type": "string"
+          },
+          "llm": {
+            "enum": [
+              "ok",
+              "unavailable"
+            ],
+            "title": "Llm",
+            "type": "string"
+          },
+          "redis": {
+            "enum": [
+              "ok",
+              "unavailable"
+            ],
+            "title": "Redis",
+            "type": "string"
+          }
+        },
+        "required": [
+          "database",
+          "redis",
+          "llm"
+        ],
+        "title": "HealthChecks",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "checks": {
+            "$ref": "#/components/schemas/HealthChecks"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "MeOut": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/ProfileOut"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/SettingsOut"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          }
+        },
+        "required": [
+          "user",
+          "profile",
+          "settings"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
+      "PracticeMode": {
+        "enum": [
+          "text",
+          "voice"
+        ],
+        "title": "PracticeMode",
+        "type": "string"
+      },
+      "ProfileOut": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "english_level": {
+            "$ref": "#/components/schemas/EnglishLevel"
+          },
+          "focus_areas": {
+            "items": {
+              "$ref": "#/components/schemas/Dimension"
+            },
+            "title": "Focus Areas",
+            "type": "array"
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/Goal"
+            },
+            "title": "Goals",
+            "type": "array"
+          },
+          "native_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Language"
+          },
+          "seniority": {
+            "$ref": "#/components/schemas/Seniority"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "display_name",
+          "seniority",
+          "native_language",
+          "english_level",
+          "goals",
+          "focus_areas",
+          "timezone"
+        ],
+        "title": "ProfileOut",
+        "type": "object"
+      },
+      "ProfileUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "english_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EnglishLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "focus_areas": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Dimension"
+                },
+                "maxItems": 3,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus Areas"
+          },
+          "goals": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Goal"
+                },
+                "maxItems": 6,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goals"
+          },
+          "native_language": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Language"
+          },
+          "seniority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Seniority"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "title": "ProfileUpdate",
+        "type": "object"
+      },
+      "Seniority": {
+        "enum": [
+          "junior",
+          "mid",
+          "senior",
+          "staff_plus",
+          "manager"
+        ],
+        "title": "Seniority",
+        "type": "string"
+      },
+      "SettingsOut": {
+        "properties": {
+          "default_mode": {
+            "$ref": "#/components/schemas/PracticeMode"
+          },
+          "tts_voice": {
+            "title": "Tts Voice",
+            "type": "string"
+          },
+          "voice_input_mode": {
+            "$ref": "#/components/schemas/VoiceInputMode"
+          }
+        },
+        "required": [
+          "default_mode",
+          "voice_input_mode",
+          "tts_voice"
+        ],
+        "title": "SettingsOut",
+        "type": "object"
+      },
+      "SettingsUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "default_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PracticeMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tts_voice": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tts Voice"
+          },
+          "voice_input_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceInputMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "SettingsUpdate",
+        "type": "object"
+      },
+      "UserOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "email_verified": {
+            "title": "Email Verified",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_local": {
+            "title": "Is Local",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "is_local",
+          "email_verified"
+        ],
+        "title": "UserOut",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VoiceInputMode": {
+        "enum": [
+          "push_to_talk",
+          "hands_free"
+        ],
+        "title": "VoiceInputMode",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "title": "Articulate AI API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "get_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Me",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/profile": {
+      "patch": {
+        "operationId": "update_my_profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update My Profile",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "operationId": "get_my_settings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get My Settings",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "update_my_settings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update My Settings",
+        "tags": [
+          "me"
+        ]
+      }
+    }
+  }
+}
