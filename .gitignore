@@ -1,0 +1,42 @@
+# Secrets and local env
+.env
+.env.local
+.env.*.local
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+.next-e2e/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Test artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Evals, backups, spikes
+apps/api/evals/results/
+backups/
+apps/api/spikes/**/audio/
+
+# Audio (only committed fixtures are allowed)
+*.wav
+!apps/web/e2e/fixtures/*.wav
+!apps/api/tests/fixtures/audio/*.wav
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

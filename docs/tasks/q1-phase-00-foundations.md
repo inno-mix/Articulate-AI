@@ -65,15 +65,15 @@ apps/web/tests/components/health-badge.test.tsx  apps/web/e2e/smoke.spec.ts
 `Makefile`, `infra/docker-compose.yml`, `infra/initdb/01-create-databases.sql`.
 
 **Subtasks:**
-- [ ] 0.1.1 Create `.gitignore` covering: `.env`, `.env.local`, `.venv/`, `__pycache__/`,
+- [x] 0.1.1 Create `.gitignore` covering: `.env`, `.env.local`, `.venv/`, `__pycache__/`,
   `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `htmlcov/`, `node_modules/`,
   `.next/`, `.next-e2e/`, `playwright-report/`, `test-results/`, `apps/api/evals/results/`,
   `backups/`, `.DS_Store`,
   `*.wav` except `apps/web/e2e/fixtures/*.wav` and `apps/api/tests/fixtures/audio/*.wav`
   (use `!` negation lines).
-- [ ] 0.1.2 Create `.editorconfig` (utf-8, lf, final newline; 4 spaces for `*.py`, 2 for
+- [x] 0.1.2 Create `.editorconfig` (utf-8, lf, final newline; 4 spaces for `*.py`, 2 for
   everything else) and `.nvmrc` containing `22`.
-- [ ] 0.1.3 Create `pnpm-workspace.yaml`:
+- [x] 0.1.3 Create `pnpm-workspace.yaml`:
   ```yaml
   packages:
     - "apps/web"
@@ -94,7 +94,7 @@ apps/web/tests/components/health-badge.test.tsx  apps/web/e2e/smoke.spec.ts
   }
   ```
   Then `pnpm install` (installs `concurrently`; `apps/web` doesn't exist yet — that's fine).
-- [ ] 0.1.4 Create `infra/docker-compose.yml`:
+- [x] 0.1.4 Create `infra/docker-compose.yml`:
   ```yaml
   name: articulate
   services:
@@ -137,7 +137,7 @@ apps/web/tests/components/health-badge.test.tsx  apps/web/e2e/smoke.spec.ts
   CREATE DATABASE articulate_test OWNER articulate;
   CREATE DATABASE articulate_e2e OWNER articulate;
   ```
-- [ ] 0.1.5 Create the `Makefile` with every target listed in `docs/guides/local-development.md` §3.
+- [x] 0.1.5 Create the `Makefile` with every target listed in `docs/guides/local-development.md` §3.
   Targets whose apps don't exist yet may fail until later tasks — that's expected. Rules:
   `SHELL := /bin/bash`; use relative paths only (the absolute path has a space); `infra-up` uses
   `docker compose -f infra/docker-compose.yml up -d --wait postgres redis`; `help` is the default
@@ -149,16 +149,16 @@ apps/web/tests/components/health-badge.test.tsx  apps/web/e2e/smoke.spec.ts
   `db-restore FILE=…` asks for confirmation unless `FORCE=1`, then pipes the file into
   `pg_restore -U articulate -d articulate --clean --if-exists`; `setup` skips
   `playwright install` when `SKIP_PLAYWRIGHT=1` (used by CI).
-- [ ] 0.1.6 Verify: `docker compose -f infra/docker-compose.yml config` → no errors;
+- [x] 0.1.6 Verify: `docker compose -f infra/docker-compose.yml config` → no errors;
   `make infra-up` → both services healthy;
   `docker compose -f infra/docker-compose.yml exec postgres psql -U articulate -l` → lists
   `articulate`, `articulate_test`, `articulate_e2e`;
   `docker compose -f infra/docker-compose.yml exec redis redis-cli ping` → `PONG`.
-- [ ] 0.1.7 Commit: `chore: add repo skeleton, makefile and local infrastructure`
+- [x] 0.1.7 Commit: `chore: add repo skeleton, makefile and local infrastructure`
 
 **Acceptance criteria:**
-- [ ] `make help` lists all targets with descriptions.
-- [ ] `make infra-up` starts Postgres and Redis bound to 127.0.0.1 only; three databases exist.
+- [x] `make help` lists all targets with descriptions.
+- [x] `make infra-up` starts Postgres and Redis bound to 127.0.0.1 only; three databases exist.
 
 **Pitfalls:** init scripts run only on an empty volume — if the volume already existed, run
 `docker compose -f infra/docker-compose.yml down -v` (destroys local data; ask first if it has data).

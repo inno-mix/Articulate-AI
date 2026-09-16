@@ -1,0 +1,12 @@
+{
+  "name": "articulate-ai",
+  "private": true,
+  "packageManager": "pnpm@10.29.3",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev:all": "concurrently -k -n api,worker,web -c blue,magenta,green \"pnpm run dev:api\" \"pnpm run dev:worker\" \"pnpm --filter web dev\"",
+    "dev:api": "cd apps/api && uv run uvicorn app.main:app --reload --host 127.0.0.1 --port ${API_PORT:-8000}",
+    "dev:worker": "cd apps/api && uv run taskiq worker app.worker.broker:broker app.worker.tasks"
+  },
+  "devDependencies": { "concurrently": "^9" }
+}

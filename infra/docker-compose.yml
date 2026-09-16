@@ -1,0 +1,35 @@
+name: articulate
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: articulate
+      POSTGRES_PASSWORD: articulate
+      POSTGRES_DB: articulate
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U articulate -d articulate"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports: ["127.0.0.1:6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 128m
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: ["mail"]
+    ports: ["127.0.0.1:8025:8025", "127.0.0.1:1025:1025"]
+    mem_limit: 64m
+volumes:
+  pgdata:
