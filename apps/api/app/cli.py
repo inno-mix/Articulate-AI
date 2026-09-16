@@ -4,8 +4,10 @@ import argparse
 import asyncio
 import sys
 
+from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from taskiq.exceptions import TaskiqResultTimeoutError
 
 from app.core.config import Settings, get_settings
 from app.core.db import SessionFactory, create_engine, create_session_factory
@@ -54,6 +56,45 @@ async def reset_db(settings: Settings) -> None:
     print("database reset complete")
 
 
+def _refuse_in_production(settings: Settings, action: str) -> None:
+    if settings.app_env == "production":
+        raise SystemExit(f"refusing to {action} in production")
+
+
+async def ping_worker(settings: Settings, *, timeout_s: float = 10.0) -> None:
+    """Send `ping` through the queue and print the worker's reply. Used by the E2E smoke test."""
+    _refuse_in_production(settings, "ping the worker")
+    # Imported here so the broker is only built when this command runs.
+    from app.worker.broker import broker
+    from app.worker.tasks.system import ping
+
+    await broker.startup()
+    try:
+        task = await ping.kiq("cli")
+        result = await task.wait_result(timeout=timeout_s)
+    except TaskiqResultTimeoutError:
+        raise SystemExit(
+            f"no reply from the worker within {timeout_s:g} s; is it running? (make dev starts it)"
+        ) from None
+    finally:
+        await broker.shutdown()
+    if result.is_err:
+        raise SystemExit(f"worker task failed: {result.error}")
+    print(result.return_value)
+
+
+async def flush_redis(settings: Settings) -> None:
+    """Delete every key in the Redis database named by REDIS_URL (queued jobs, results)."""
+    _refuse_in_production(settings, "flush Redis")
+    client = Redis.from_url(settings.redis_url)
+    try:
+        await client.flushdb()
+        db = client.connection_pool.connection_kwargs.get("db", 0)
+    finally:
+        await client.aclose()
+    print(f"redis db {db} flushed")
+
+
 async def _run_seed(settings: Settings) -> None:
     engine = create_engine(settings.database_url)
     try:
@@ -68,6 +109,8 @@ def main(argv: list[str] | None = None) -> None:
     commands.add_parser("seed", help="create the local user and load content")
     reset = commands.add_parser("reset-db", help="drop, migrate and seed the local database")
     reset.add_argument("--force", action="store_true", help="required: confirms data loss")
+    commands.add_parser("ping-worker", help="check that a worker is consuming the queue")
+    commands.add_parser("flush-redis", help="delete every key in the REDIS_URL database")
     args = parser.parse_args(argv)
 
     settings = get_settings()
@@ -77,6 +120,10 @@ def main(argv: list[str] | None = None) -> None:
         if not args.force:
             sys.exit("reset-db deletes all data; pass --force to confirm")
         asyncio.run(reset_db(settings))
+    elif args.command == "ping-worker":
+        asyncio.run(ping_worker(settings))
+    elif args.command == "flush-redis":
+        asyncio.run(flush_redis(settings))
 
 
 if __name__ == "__main__":

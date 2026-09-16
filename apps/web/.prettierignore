@@ -1,0 +1,8 @@
+# Generated: `make check-client` compares it with fresh output byte for byte.
+src/lib/api/schema.ts
+# Next.js rewrites this file itself.
+tsconfig.json
+.next/
+.next-e2e/
+playwright-report/
+test-results/

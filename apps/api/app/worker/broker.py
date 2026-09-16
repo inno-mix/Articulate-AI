@@ -6,11 +6,14 @@ Worker processes open their own database engine on startup and keep it on `broke
 
 import taskiq_fastapi
 from taskiq import AsyncBroker, InMemoryBroker, TaskiqEvents, TaskiqState
-from taskiq_redis import ListQueueBroker
+from taskiq_redis import ListQueueBroker, RedisAsyncResultBackend
 
 from app.core.config import Settings, get_settings
 from app.core.db import create_engine, create_session_factory
 from app.core.logging import configure_logging
+
+# Results are only read by tooling (`app.cli ping-worker`); expire them so Redis stays small.
+RESULT_TTL_SECONDS = 3600
 
 
 def build_broker(settings: Settings) -> AsyncBroker:
@@ -18,7 +21,9 @@ def build_broker(settings: Settings) -> AsyncBroker:
         return InMemoryBroker()
     # redis-py 8 defaults to a 5 s socket timeout; taskiq-redis waits for jobs with a
     # blocking BRPOP, so the broker's connections must not time out while idle.
-    return ListQueueBroker(settings.redis_url, socket_timeout=None)
+    return ListQueueBroker(settings.redis_url, socket_timeout=None).with_result_backend(
+        RedisAsyncResultBackend(settings.redis_url, result_ex_time=RESULT_TTL_SECONDS)
+    )
 
 
 broker: AsyncBroker = build_broker(get_settings())

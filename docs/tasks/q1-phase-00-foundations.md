@@ -504,7 +504,9 @@ FastAPI integration, testing with `InMemoryBroker`).
 ```python
 # app/worker/broker.py
 def build_broker(settings: Settings) -> AsyncBroker:
-    # test → InMemoryBroker(); otherwise ListQueueBroker(settings.redis_url)
+    # test → InMemoryBroker(); otherwise ListQueueBroker(settings.redis_url, socket_timeout=None)
+    #   .with_result_backend(RedisAsyncResultBackend(settings.redis_url, result_ex_time=RESULT_TTL_SECONDS))
+RESULT_TTL_SECONDS = 3600   # added in Task 0.7 for `app.cli ping-worker`
 broker: AsyncBroker = build_broker(get_settings())
 taskiq_fastapi.init(broker, "app.main:app")   # lets tasks use FastAPI dependencies (TaskiqDepends)
 
@@ -593,7 +595,11 @@ export const API_ORIGIN = new URL(API_URL).origin;   // paths in schema.ts alrea
 import createClient from "openapi-fetch";
 import type { paths } from "./schema";
 import { API_ORIGIN } from "@/lib/env";
-export const api = createClient<paths>({ baseUrl: API_ORIGIN, credentials: "include" });
+export const api = createClient<paths>({
+  baseUrl: API_ORIGIN,
+  credentials: "include",
+  fetch: (request) => globalThis.fetch(request),   // looked up per call so MSW (patched after import) applies
+});
 export async function unwrap<T>(p: Promise<{ data?: T; error?: unknown; response: Response }>): Promise<T>
 // throws ApiError when error is set
 
@@ -602,55 +608,57 @@ export class ApiError extends Error { code: string; status: number; details: Rec
 export function toApiError(status: number, body: unknown): ApiError   // handles non-envelope bodies → code "internal_error"
 export function errorMessage(code: string): string                    // friendly text; default fallback
 
-// src/components/app-shell.tsx — nav: Home, Practice, Pronunciation, Drills, Writing, Progress, Settings
+// src/components/app-shell.tsx — nav: Home, Practice, History, Pronunciation, Drills, Writing, Progress, Settings
 //   items not yet built render disabled with a "Soon" badge (config array with `enabled` flag)
 // src/components/health-badge.tsx — shows "API: ok" / "API: degraded" / "API: offline"
 ```
 
 **Subtasks:**
-- [ ] 0.7.1 Check current flags: `pnpm create next-app@latest --help`. Then from the repo root:
+- [x] 0.7.1 Check current flags: `pnpm create next-app@latest --help`. Then from the repo root:
   `pnpm create next-app@latest apps/web --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-pnpm --disable-git --yes`
   Set `"name": "web"` in `apps/web/package.json`. Keep the generated `apps/web/AGENTS.md` and add
   a first line: `Also read ../../AGENTS.md (project rules take precedence).`
-- [ ] 0.7.2 Add scripts to `apps/web/package.json`: `"typecheck": "tsc --noEmit"`,
+- [x] 0.7.2 Add scripts to `apps/web/package.json`: `"typecheck": "tsc --noEmit"`,
   `"test": "vitest run"`, `"test:watch": "vitest"`, `"e2e": "playwright test"`,
   `"format": "prettier --write ."`.
-- [ ] 0.7.3 Install deps: `pnpm --filter web add @tanstack/react-query openapi-fetch zod` and
+- [x] 0.7.3 Install deps: `pnpm --filter web add @tanstack/react-query openapi-fetch zod` and
   `pnpm --filter web add -D openapi-typescript vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event msw @playwright/test prettier`.
-- [ ] 0.7.4 shadcn: `pnpm --filter web dlx shadcn@latest init` (check flags in docs; base colour
+- [x] 0.7.4 shadcn: `pnpm --filter web dlx shadcn@latest init` (check flags in docs; base colour
   neutral) then add `button card badge input textarea select tabs dialog skeleton sonner progress
   tooltip separator label`.
-- [ ] 0.7.5 Complete `make gen-client`:
+- [x] 0.7.5 Complete `make gen-client`:
   `pnpm --filter web exec openapi-typescript ../api/openapi.json -o src/lib/api/schema.ts`;
   run it; commit the generated file.
-- [ ] 0.7.6 Configure Vitest (`vitest.config.ts`: react plugin, jsdom, `tests/setup.ts` with
+- [x] 0.7.6 Configure Vitest (`vitest.config.ts`: react plugin, jsdom, `tests/setup.ts` with
   jest-dom + MSW `setupServer()` lifecycle, alias `@` → `src`).
-- [ ] 0.7.7 Write failing tests:
+- [x] 0.7.7 Write failing tests:
   - `tests/lib/api/errors.test.ts`: `toApiError` parses the envelope; falls back to
     `internal_error` for HTML/empty bodies; `errorMessage("llm_unavailable")` returns friendly
     text; unknown code returns the generic fallback.
   - `tests/components/health-badge.test.tsx` (MSW): shows "API: ok" on `status: ok`;
     "API: degraded" + tooltip listing unavailable checks; "API: offline" on network error.
-- [ ] 0.7.8 Run `pnpm --filter web test` → FAIL. Implement `errors.ts`, `client.ts`,
+- [x] 0.7.8 Run `pnpm --filter web test` → FAIL. Implement `errors.ts`, `client.ts`,
   `query-client.ts` (defaults: `retry: 1`, `staleTime: 30_000`), `providers.tsx`
   (`QueryClientProvider` + `Toaster`), `app-shell.tsx`, `health-badge.tsx`, `layout.tsx`,
   `page.tsx` (heading "Articulate AI", one-line description, health badge). Run → PASS.
-- [ ] 0.7.9 Playwright, isolated from dev servers and data exactly as in `testing-strategy.md` §4:
-  Chromium only; `workers: 1`, `fullyParallel: false` (single local user in Q1); API on 8100 (`API_PORT`), web on 3100 with `NEXT_DIST_DIR=.next-e2e`
+- [x] 0.7.9 Playwright, isolated from dev servers and data exactly as in `testing-strategy.md` §4:
+  Chromium only; `workers: 1`, `fullyParallel: false` (single local user in Q1); API on 8100
+  (`API_PORT`), web on 3100 with `NEXT_DIST_DIR=.next-e2e`
   (`next.config.ts`: `distDir: process.env.NEXT_DIST_DIR ?? ".next"`), **the worker**, Redis db 2,
-  database `articulate_e2e`, fake providers, `reuseExistingServer: false`;
-  `e2e/global-setup.ts` resets + seeds `articulate_e2e` (`uv run python -m app.cli reset-db --force`
-  with that URL), flushes Redis db 2 and — unless the installed Playwright can start the worker as a
-  `webServer` that waits on output (check the docs) — spawns the worker, which
-  `e2e/global-teardown.ts` stops; `use.baseURL = "http://localhost:3100"`; fake-media launch args.
-  Create `e2e/fixtures/hello.wav` (1 s, 16 kHz mono; generate with a small Python script using
-  `wave` + sine). Write `e2e/smoke.spec.ts`: home shows "API: ok"; nav shows "Practice"; and
-  `test_worker_is_running` — enqueue `ping` through a test-only CLI command
-  (`uv run python -m app.cli ping-worker` — add it to `app/cli.py`; refuses in production) and
-  expect `pong` within 10 s.
-- [ ] 0.7.10 Run `make test-e2e` → PASS.
-- [ ] 0.7.11 Create `apps/web/.env.example` (`local-development.md` §5), copy to `.env.local`.
-- [ ] 0.7.12 Create `.claude/launch.json`:
+  database `articulate_e2e`, fake providers, `reuseExistingServer: false`; shared values in
+  `e2e/env.ts`. Playwright 1.63 starts web servers *before* `globalSetup`, so the API server's
+  command first runs `uv run python -m app.cli reset-db --force` and
+  `uv run python -m app.cli flush-redis` (new command; refuses in production), and the worker is a
+  `webServer` entry with `wait: { stderr: /Listening started/ }` (no global setup/teardown);
+  `use.baseURL = "http://localhost:3100"`; fake-media launch args; use `__dirname` (Playwright
+  loads the config as CommonJS). Create `e2e/fixtures/hello.wav` (1 s, 16 kHz mono; generate with
+  a small Python script using `wave` + sine). Write `e2e/smoke.spec.ts`: home shows "API: ok" with
+  no console errors; nav shows "Practice"; and "worker is running" — enqueue `ping` through a
+  test-only CLI command (`uv run python -m app.cli ping-worker` — add it to `app/cli.py`; refuses
+  in production; needs a Redis result backend on the broker) and expect `pong:cli` within 10 s.
+- [x] 0.7.10 Run `make test-e2e` → PASS.
+- [x] 0.7.11 Create `apps/web/.env.example` (`local-development.md` §5), copy to `.env.local`.
+- [x] 0.7.12 Create `.claude/launch.json`:
   ```json
   { "version": "0.0.1",
     "configurations": [
@@ -658,14 +666,14 @@ export function errorMessage(code: string): string                    // friendl
       { "name": "dev-fake", "runtimeExecutable": "make", "runtimeArgs": ["dev-fake"], "port": 3000 }
     ] }
   ```
-- [ ] 0.7.13 `make lint` (web part: `lint`, `typecheck`) → clean. Commit:
+- [x] 0.7.13 `make lint` (web part: `lint`, `typecheck`) → clean. Commit:
   `feat(web): scaffold next.js app shell with typed api client and tests`
 
 **Acceptance criteria:**
-- [ ] `make dev` → http://localhost:3000 shows the shell and "API: ok" (with Ollama running) or
+- [x] `make dev` → http://localhost:3000 shows the shell and "API: ok" (with Ollama running) or
   "API: degraded" (Ollama stopped).
-- [ ] Browser console has no errors; network tab shows `GET /api/v1/health` with CORS OK.
-- [ ] Vitest and Playwright pass.
+- [x] Browser console has no errors; network tab shows `GET /api/v1/health` with CORS OK.
+- [x] Vitest and Playwright pass.
 
 **Pitfalls:** `NEXT_PUBLIC_*` vars are inlined at build time — restart the dev server after
 changing them. openapi-fetch paths include `/api/v1`, so the client `baseUrl` must be the origin.
@@ -714,3 +722,22 @@ changing them. openapi-fetch paths include `/api/v1`, so the client `baseUrl` mu
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+
+- 2026-09-17 · Tasks 0.1–0.6 · 9ff8b3c, 262887d, f7634ce, dc6e295, d715ab9, db2e324 · each task's
+  tests passed before its commit; migrate/seed/backup/restore/reset round trip checked by hand;
+  API smoke (`/health` ok with Ollama, `/me`, cross-site PATCH → 403, bad host → 400) · Notes:
+  redis-py 8's 5 s socket timeout crashed idle workers → `socket_timeout=None` + regression test ·
+  Follow-ups: none
+- 2026-09-17 · Task 0.7 · (this commit) · `make lint` clean (incl. new Prettier check);
+  `make test-web` 9 passed; `make test-api` 53 passed; `make test-e2e` 2 passed; `next build` OK;
+  browser check on `make dev`: shell renders in light/dark and at 375 px with no horizontal
+  scroll, "API: ok", no console errors, `GET /api/v1/health` 200 with
+  `access-control-allow-origin`; degraded API (unreachable Ollama) returns
+  `{"status":"degraded",…,"llm":"unavailable"}` · Notes: openapi-fetch needs a lazy `fetch` for
+  MSW; Playwright starts web servers before `globalSetup`, so the E2E reset runs in the API
+  server command and the worker is a `webServer` waiting on "Listening started"; added a Redis
+  result backend (1 h TTL) for `app.cli ping-worker`, plus `app.cli flush-redis`; taskiq's
+  process manager can hang on a doubled SIGTERM (documented in local-development §7); the
+  desktop app's `preview_start` fails here with `getcwd: Operation not permitted` (macOS
+  Documents-folder permission for the app) — start `make dev` in a terminal and open the pane by
+  URL instead · Follow-ups: none

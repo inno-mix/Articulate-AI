@@ -71,7 +71,8 @@ tests/integration/api/test_<domain>.py
 
 ### Tooling
 - Next.js 16 (App Router, Turbopack), React 19, TypeScript `strict`, Tailwind CSS v4, shadcn/ui,
-  ESLint (Next config), Prettier.
+  ESLint (Next config), Prettier (`printWidth: 100`, like Ruff; `.prettierignore` skips the
+  generated `src/lib/api/schema.ts` and `tsconfig.json`, which Next.js rewrites).
 - pnpm workspace; add deps with `pnpm --filter web add <pkg>`.
 - Next.js 16 uses `proxy.ts` (not `middleware.ts`) for request interception — Phase 7 only.
 

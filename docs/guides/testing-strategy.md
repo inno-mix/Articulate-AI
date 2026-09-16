@@ -98,19 +98,22 @@ its current API with Context7 before use). If that proves impossible, use `TestC
 ## 4. End-to-end (Playwright)
 
 - `playwright.config.ts` runs the app **in isolation from your dev servers and data**:
-  - API: `pnpm run dev:api` with `API_PORT=8100`; web: `pnpm --filter web dev --port 3100` with
-    `NEXT_DIST_DIR=.next-e2e` (`next.config.ts` reads it for `distDir`); both as `webServer`
-    entries with `reuseExistingServer: false`.
-  - **Worker:** reports and memory updates need it. Start `pnpm run dev:worker` with the same
-    environment — as a `webServer` entry if the installed Playwright can wait on process output
-    (check the docs), otherwise spawned in `globalSetup` and stopped in `globalTeardown`.
+  - Three `webServer` entries (shared settings live in `apps/web/e2e/env.ts`):
+    - API: first resets + seeds `articulate_e2e` (`app.cli reset-db --force`) and flushes Redis
+      db 2 (`app.cli flush-redis`), then `pnpm run dev:api` with `API_PORT=8100`. Playwright
+      starts web servers **before** `globalSetup`, so the reset lives here: nothing can connect
+      to the old schema. There is no `globalSetup`/`globalTeardown`.
+    - **Worker** (reports and memory updates need it): `pnpm run dev:worker` with
+      `wait: { stderr: /Listening started/ }`.
+    - Web: `pnpm --filter web dev --port 3100` with `NEXT_DIST_DIR=.next-e2e` (`next.config.ts`
+      reads it for `distDir`).
+    - `reuseExistingServer: false`. Playwright stops each server by killing its process group;
+      keep that default (see the worker shutdown pitfall in `local-development.md` §7).
   - Environment for API and worker: `APP_ENV=development`, `DATABASE_URL=…/articulate_e2e`,
     `REDIS_URL=redis://localhost:6379/2`, `CORS_ORIGINS=http://localhost:3100`, fake providers,
     `FAKE_PRONUNCIATION_LOW_WORDS=cache` (Phase 4).
     Web: `NEXT_PUBLIC_API_URL=http://localhost:8100/api/v1`,
     `NEXT_PUBLIC_WS_URL=ws://localhost:8100/api/v1`. `use.baseURL = "http://localhost:3100"`.
-  - `globalSetup`: reset + seed `articulate_e2e` (`app.cli reset-db --force` with that URL) and
-    flush Redis db 2.
   - Chromium with `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream
     --use-file-for-fake-audio-capture=e2e/fixtures/hello.wav`.
   - If Next.js refuses to start a second dev server in the same project, stop `make dev` first.
@@ -118,6 +121,8 @@ its current API with Context7 before use). If that proves impossible, use `TestC
     `fullyParallel: false`, and write each spec so it doesn't depend on another spec's leftovers
     (create what it needs). From Phase 7 each spec registers its own user and parallel workers may
     be enabled.
+- `smoke.spec.ts` (Phase 0): home renders with "API: ok" and no console errors; the worker answers
+  `app.cli ping-worker`.
 - Journeys (each is one spec file, added in the phase that builds it):
   1. `text-practice.spec.ts` — pick scenario → send 2 messages → end → report ready.
   2. `voice-practice.spec.ts` — start voice session → PTT turn → assistant turn appears → end.

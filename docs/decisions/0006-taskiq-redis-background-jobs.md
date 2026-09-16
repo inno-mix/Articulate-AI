@@ -15,6 +15,8 @@ Worker: `taskiq worker app.worker.broker:broker app.worker.tasks` (explicit modu
 ## Consequences
 - Redis is required locally (also used for rate limiting).
 - Tasks must be idempotent (a report task checks status before working).
+- Results go to a Redis result backend that expires them after 1 h. The app never reads them;
+  tooling does (`app.cli ping-worker`).
 
 ## Alternatives considered
 - ARQ — maintenance-only.

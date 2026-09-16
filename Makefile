@@ -82,6 +82,7 @@ test-live: ## Tests against real Ollama/Deepgram/Azure (costs money for Deepgram
 lint: ## Lint and type-check both apps
 	cd $(API) && uv run ruff check . && uv run ruff format --check . && uv run mypy app
 	pnpm --filter web lint
+	pnpm --filter web format:check
 	pnpm --filter web typecheck
 
 format: ## Format both apps

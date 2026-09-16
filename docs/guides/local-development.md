@@ -71,7 +71,7 @@ curl -s -X PATCH http://localhost:8000/api/v1/me/profile \
 | `make test-web` | `pnpm --filter web test` (Vitest) |
 | `make test-e2e` | Playwright with its own servers and data: web 3100, api 8100, worker, Redis db 2, DB `articulate_e2e`, fake providers (see `testing-strategy.md` §4). If Next.js refuses a second dev server, stop `make dev` first |
 | `make test-live` | `uv run pytest -m live` (real Ollama/Deepgram/Azure; costs money for Deepgram/Azure) |
-| `make lint` | ruff check, ruff format --check, mypy, `pnpm --filter web lint`, `pnpm --filter web typecheck` |
+| `make lint` | ruff check, ruff format --check, mypy, `pnpm --filter web lint`, `pnpm --filter web format:check` (Prettier), `pnpm --filter web typecheck` |
 | `make format` | ruff format, ruff check --fix, prettier --write |
 | `make gen-client` | export OpenAPI → `apps/api/openapi.json` → `apps/web/src/lib/api/schema.ts` |
 | `make check-client` | `make gen-client` then `git diff --exit-code` on both files |
@@ -172,3 +172,7 @@ after 5 min); if memory is tight, Postgres/Redis can run via Homebrew instead of
 | No audio playback | click anywhere first (browsers block audio until a user gesture); the voice page starts audio on the "Start" click |
 | Azure 429 | F0 allows one request at a time; wait and retry |
 | `port already in use` | `lsof -i :8000` and stop the old process |
+| Worker won't stop after a SIGTERM | taskiq's process manager can deadlock when it gets two SIGTERMs at once (e.g. `kill -TERM -<group>` hits both `uv run` and taskiq, and `uv` forwards another). Ctrl+C and `make dev`'s own shutdown are fine. Fix: `pkill -f "taskiq worker"`. |
+| Is the worker consuming jobs? | `cd apps/api && uv run python -m app.cli ping-worker` prints `pong:cli` within 10 s (dev tool; refuses in production) |
+| Claude desktop `preview_start` fails with `getcwd: Operation not permitted` | macOS blocks the app from reading `~/Documents`. Allow it in System Settings → Privacy & Security → Files and Folders, or run `make dev` in a terminal and open `http://localhost:3000` in the browser pane |
+| Stale jobs in Redis | `cd apps/api && uv run python -m app.cli flush-redis` empties the database in `REDIS_URL` (dev tool; refuses in production) |
