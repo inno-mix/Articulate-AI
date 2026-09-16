@@ -37,6 +37,8 @@
   and rolls back on exception. Services call `await db.flush()` when they need generated ids.
   Streaming endpoints and workers manage their own sessions explicitly (`async with
   session_factory() as db, db.begin():`).
+- Type session factories as `app.core.db.SessionFactory` (anything usable as
+  `async with factory() as db`), not `async_sessionmaker`, so tests can pass their locked factory.
 - Never hold a database connection while awaiting an LLM, Deepgram or Azure call, or while
   streaming to a client: in request-scoped services, do the reads/writes you need and
   `await db.commit()` (which returns the connection to the pool) **before** the provider call, then

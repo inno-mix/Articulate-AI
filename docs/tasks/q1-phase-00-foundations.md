@@ -362,19 +362,19 @@ async def seed(session_factory) -> None   # idempotent: local user + profile + s
 ```
 
 **Subtasks:**
-- [ ] 0.3.1 Implement `app/core/db.py` and wire engine/session factory into `create_app` via a
+- [x] 0.3.1 Implement `app/core/db.py` and wire engine/session factory into `create_app` via a
   FastAPI lifespan (`app.state.engine`, `app.state.session_factory`; dispose on shutdown).
-- [ ] 0.3.2 Implement models per `data-model.md`. Enums as TEXT + CHECK
+- [x] 0.3.2 Implement models per `data-model.md`. Enums as TEXT + CHECK
   (`Enum(Seniority, native_enum=False, create_constraint=True, length=32,
   values_callable=lambda e: [m.value for m in e])`). `profiles.goals`/`focus_areas` use
   `ARRAY(Text)` with `server_default="{}"`.
-- [ ] 0.3.3 Initialise Alembic with the async template (`uv run alembic init -t async migrations`);
+- [x] 0.3.3 Initialise Alembic with the async template (`uv run alembic init -t async migrations`);
   set `sqlalchemy.url` from `Settings` inside `env.py` (never hard-code); `target_metadata =
   Base.metadata`; import `app.models` so all tables register; `compare_type=True`.
-- [ ] 0.3.4 `uv run alembic revision --autogenerate -m "users profiles settings"`; rename the file
+- [x] 0.3.4 `uv run alembic revision --autogenerate -m "users profiles settings"`; rename the file
   to `0001_users_profiles_settings.py` with `revision = "0001"`; review by hand (CHECK constraints
   present, server defaults, `ON DELETE CASCADE` on profile/settings FKs).
-- [ ] 0.3.5 Write `tests/conftest.py` fixtures exactly as listed in `testing-strategy.md` §2
+- [x] 0.3.5 Write `tests/conftest.py` fixtures exactly as listed in `testing-strategy.md` §2
   (`settings`, `engine`, `connection`, `db`, `session_factory`, `app`, `client`, `local_user`,
   `other_user`), plus `tests/support/db.py::LockedSessionFactory` for the `session_factory`
   fixture. The very first lines of `conftest.py` set `APP_ENV=test` and the fake provider
@@ -383,33 +383,33 @@ async def seed(session_factory) -> None   # idempotent: local user + profile + s
   `TEST_DATABASE_URL` **in a thread** via `await asyncio.to_thread(command.upgrade, cfg, "head")`
   because `env.py` calls `asyncio.run`. `local_user` inserts via the seed function. Write
   `tests/factories.py::make_user(db, email, is_local=False)`.
-- [ ] 0.3.6 Write failing test `tests/integration/test_zz_migrations.py::test_upgrade_downgrade_upgrade`
+- [x] 0.3.6 Write failing test `tests/integration/test_zz_migrations.py::test_upgrade_downgrade_upgrade`
   — runs `downgrade base` then `upgrade head` against `articulate_test` and asserts the three
   tables exist afterwards (`inspect` via `run_sync`). The `zz` prefix makes pytest collect it last
   so it can't disturb other tests' schema.
-- [ ] 0.3.7 Write failing tests `tests/integration/test_seed.py`:
+- [x] 0.3.7 Write failing tests `tests/integration/test_seed.py`:
   - `test_seed_creates_local_user_profile_and_settings` — ids/email match constants,
     `is_local=True`, profile defaults (`display_name="You"`, `english_level="B2"`,
     `timezone="UTC"`), settings defaults (`default_mode="text"`,
     `voice_input_mode="push_to_talk"`, `tts_voice` = settings default).
   - `test_seed_is_idempotent` — running twice leaves exactly one user.
-- [ ] 0.3.8 Run → FAIL. Implement `app/cli.py` (`seed`, `reset-db` (drop all + upgrade + seed;
+- [x] 0.3.8 Run → FAIL. Implement `app/cli.py` (`seed`, `reset-db` (drop all + upgrade + seed;
   refuses in production)). Run → PASS.
-- [ ] 0.3.9 Wire `make db-migrate`, `make db-revision`, `make seed`, `make db-reset`,
+- [x] 0.3.9 Wire `make db-migrate`, `make db-revision`, `make seed`, `make db-reset`,
   `make db-backup`, `make db-restore`; run them against the dev DB; verify with
   `psql -c "select id, email, is_local from users"`. Check the backup round trip: `make db-backup`
   → delete the local user row with `psql` → `make db-restore FILE=<that file> FORCE=1` → the row is
   back.
-- [ ] 0.3.10 `make lint` + `make test-api` → PASS. Commit:
+- [x] 0.3.10 `make lint` + `make test-api` → PASS. Commit:
   `feat(api): add database layer, first migration and seed command`
 
 **Acceptance criteria:**
-- [ ] `make db-migrate && make seed` on an empty DB creates the local user with profile/settings.
-- [ ] Migrations downgrade and upgrade cleanly.
-- [ ] Each test runs in an isolated transaction (no data leaks between tests).
-- [ ] A test that nests or long-holds sessions from `session_factory` fails with the lock timeout
+- [x] `make db-migrate && make seed` on an empty DB creates the local user with profile/settings.
+- [x] Migrations downgrade and upgrade cleanly.
+- [x] Each test runs in an isolated transaction (no data leaks between tests).
+- [x] A test that nests or long-holds sessions from `session_factory` fails with the lock timeout
   message (add `tests/unit/test_locked_session_factory.py` proving it).
-- [ ] Backups can be taken and restored.
+- [x] Backups can be taken and restored.
 
 **Pitfalls:** `lazy="raise"` means you must `selectinload` relationships explicitly (intended — it
 prevents accidental sync IO). Alembic autogenerate misses CHECK constraints from `Enum` in some
