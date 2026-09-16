@@ -431,13 +431,13 @@ versions — verify the generated file.
 **Interfaces (produces):**
 ```python
 # app/deps.py
-async def get_current_user(db: AsyncSession = Depends(get_db),
-                           settings: Settings = Depends(get_settings)) -> User
+def get_app_settings(request: Request) -> Settings   # request.app.state.settings (tests can swap it)
+async def get_current_user(db: DbDep, settings: SettingsDep) -> User
 # local_single_user → load LOCAL_USER_ID with profile+settings; missing → LocalUserMissingError
 #   (500, code "local_user_missing", message "Run `make seed` to create the local user.")
 DbDep = Annotated[AsyncSession, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
-SettingsDep = Annotated[Settings, Depends(get_settings)]
+SettingsDep = Annotated[Settings, Depends(get_app_settings)]
 
 # app/schemas/me.py
 class UserOut(BaseModel): id: UUID; email: str; is_local: bool; email_verified: bool
@@ -461,13 +461,13 @@ async def check_llm(settings: Settings) -> Literal["ok", "unavailable"]   # olla
 chars for now).
 
 **Subtasks:**
-- [ ] 0.4.1 Write failing tests `test_health.py`:
+- [x] 0.4.1 Write failing tests `test_health.py`:
   - `test_health_ok_with_fake_llm` → 200, all checks `ok`, `status == "ok"`.
   - `test_health_degraded_when_ollama_unreachable` — settings `llm_provider="ollama"`, `respx`
     mocks `GET http://localhost:11434/api/tags` to raise `httpx.ConnectError` →
     `checks.llm == "unavailable"`, `status == "degraded"`, HTTP 200.
   - `test_health_ok_when_ollama_responds` — respx returns 200 `{"models": []}` → `llm == "ok"`.
-- [ ] 0.4.2 Write failing tests `test_me.py`:
+- [x] 0.4.2 Write failing tests `test_me.py`:
   - `test_get_me_returns_local_user_profile_and_settings`
   - `test_get_me_without_seed_returns_local_user_missing` (no `local_user` fixture) → 500,
     `code == "local_user_missing"`.
@@ -476,16 +476,16 @@ chars for now).
   - `test_patch_profile_rejects_unknown_field` → 422
   - `test_patch_profile_rejects_more_than_three_focus_areas` → 422
   - `test_patch_settings_updates_default_mode_and_input_mode`
-- [ ] 0.4.3 Run `uv run pytest tests/integration/api -v` → FAIL.
-- [ ] 0.4.4 Implement deps, schemas, service, routers. Register routers in `router.py`.
-- [ ] 0.4.5 Run → PASS; `make check` (API part) → PASS.
-- [ ] 0.4.6 Manual check: `make dev` (API only for now: `pnpm run dev:api`), then
+- [x] 0.4.3 Run `uv run pytest tests/integration/api -v` → FAIL.
+- [x] 0.4.4 Implement deps, schemas, service, routers. Register routers in `router.py`.
+- [x] 0.4.5 Run → PASS; `make check` (API part) → PASS.
+- [x] 0.4.6 Manual check: `make dev` (API only for now: `pnpm run dev:api`), then
   `curl -s localhost:8000/api/v1/health` and `curl -s localhost:8000/api/v1/me`.
-- [ ] 0.4.7 Commit: `feat(api): add health, me, profile and settings endpoints`
+- [x] 0.4.7 Commit: `feat(api): add health, me, profile and settings endpoints`
 
 **Acceptance criteria:**
-- [ ] Health reports each dependency independently and never returns 5xx for a down dependency.
-- [ ] Profile/settings updates are partial and validated.
+- [x] Health reports each dependency independently and never returns 5xx for a down dependency.
+- [x] Profile/settings updates are partial and validated.
 
 ---
 

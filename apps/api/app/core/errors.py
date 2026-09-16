@@ -56,6 +56,18 @@ class ServiceUnavailableError(AppError):
     message = "A required service is unavailable. Please try again."
 
 
+class UnauthorizedError(AppError):
+    status_code = 401
+    code = "unauthorized"
+    message = "Please log in to continue."
+
+
+class LocalUserMissingError(AppError):
+    status_code = 500
+    code = "local_user_missing"
+    message = "Run `make seed` to create the local user."
+
+
 async def _app_error_handler(request: Request, exc: Exception) -> JSONResponse:
     if not isinstance(exc, AppError):
         raise exc
