@@ -18,7 +18,9 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"   # asyncpg connections belong to one event loop
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = [
   "live: calls real external services (Ollama, Deepgram, Azure); excluded by default",
 ]

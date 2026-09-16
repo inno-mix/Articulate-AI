@@ -244,7 +244,7 @@ tuple of the 7 LLM-scored keys.
 `VoiceInputMode`), extended in later phases.
 
 **Subtasks:**
-- [ ] 0.2.1 Create the uv project: `cd apps/api && uv init --app --name articulate-api --python 3.12`
+- [x] 0.2.1 Create the uv project: `cd apps/api && uv init --app --name articulate-api --python 3.12`
   (then remove the generated `main.py`/`hello.py` if any). Add dependencies:
   `uv add fastapi "uvicorn[standard]" pydantic pydantic-settings "sqlalchemy[asyncio]" asyncpg alembic redis structlog httpx jinja2 pyyaml taskiq taskiq-redis taskiq-fastapi`
   and dev deps:
@@ -252,10 +252,10 @@ tuple of the 7 LLM-scored keys.
   Configure `[tool.ruff]` (line-length 100, rules from `coding-conventions.md` §2),
   `[tool.mypy]` (`strict = true`, `plugins = ["pydantic.mypy"]`), and `[tool.pytest.ini_options]`
   exactly as in `testing-strategy.md` §2.
-- [ ] 0.2.2 Create `apps/api/.env.example` with every Phase 0 variable from
+- [x] 0.2.2 Create `apps/api/.env.example` with every Phase 0 variable from
   `local-development.md` §5 (values = the documented defaults; secrets empty) and copy it to
   `.env`.
-- [ ] 0.2.3 Write failing tests `tests/unit/core/test_config.py`:
+- [x] 0.2.3 Write failing tests `tests/unit/core/test_config.py`:
   - `test_cors_origins_parses_comma_separated` — env `CORS_ORIGINS="http://a,http://b"` →
     `["http://a", "http://b"]`.
   - `test_development_allows_ollama_and_fakes` — no error.
@@ -265,12 +265,12 @@ tuple of the 7 LLM-scored keys.
   - `test_production_rejects_local_single_user` — `AUTH_MODE=local_single_user` in production → error.
   - `test_secret_values_are_not_in_repr` — `repr(settings)` does not contain the Deepgram key value.
   (Construct `Settings(_env_file=None, **values)` so the real `.env` doesn't leak into tests.)
-- [ ] 0.2.4 Run `cd apps/api && uv run pytest tests/unit/core/test_config.py -v` → FAIL (module missing).
-- [ ] 0.2.5 Implement `app/core/config.py` (pydantic-settings; check the current `NoDecode` usage
+- [x] 0.2.4 Run `cd apps/api && uv run pytest tests/unit/core/test_config.py -v` → FAIL (module missing).
+- [x] 0.2.5 Implement `app/core/config.py` (pydantic-settings; check the current `NoDecode` usage
   for comma-separated lists with Context7 `/pydantic/pydantic-settings`). Production guard in a
   `@model_validator(mode="after")`.
-- [ ] 0.2.6 Run the test file → PASS.
-- [ ] 0.2.7 Write failing tests `tests/unit/core/test_errors.py` using a tiny FastAPI app with
+- [x] 0.2.6 Run the test file → PASS.
+- [x] 0.2.7 Write failing tests `tests/unit/core/test_errors.py` using a tiny FastAPI app with
   `register_error_handlers`:
   - `test_app_error_renders_envelope` — route raises `NotFoundError()` → 404,
     body `{"error": {"code": "not_found", "message": "Not found.", "details": {}}}`.
@@ -280,15 +280,15 @@ tuple of the 7 LLM-scored keys.
   - `test_unhandled_exception_renders_internal_error` — route raises `RuntimeError("secret")` →
     500, `code == "internal_error"`, response text does not contain `"secret"`.
     (Use `httpx.AsyncClient(transport=ASGITransport(app, raise_app_exceptions=False))`.)
-- [ ] 0.2.8 Run → FAIL. Implement `app/core/errors.py`. Run → PASS.
-- [ ] 0.2.9 Implement `app/core/logging.py`: `configure_logging(level: str, json: bool)` using
+- [x] 0.2.8 Run → FAIL. Implement `app/core/errors.py`. Run → PASS.
+- [x] 0.2.9 Implement `app/core/logging.py`: `configure_logging(level: str, json: bool)` using
   structlog (console renderer in development, JSON otherwise) with a redaction processor that
   masks exactly the field names listed in `security-privacy.md` S2 (exact names and listed
   suffixes, case-insensitive — not substrings). Tests in `tests/unit/core/test_logging.py`
   (apply the processor directly): `test_redacts_sensitive_keys` (`api_key`, `deepgram_api_key`,
   `Authorization`, `password`, `refresh_token`) and `test_keeps_non_secret_fields`
   (`input_tokens`, `keyterms`, `monkey` stay visible).
-- [ ] 0.2.10 Write failing tests `tests/unit/core/test_request_guard.py` (tiny ASGI app wrapped by
+- [x] 0.2.10 Write failing tests `tests/unit/core/test_request_guard.py` (tiny ASGI app wrapped by
   the middleware; WebSocket cases call the middleware with a hand-built `websocket` scope and
   capture the sent messages): `test_rejects_unknown_host` (400 `invalid_host` envelope),
   `test_allows_localhost_with_port`, `test_rejects_cross_origin_post` (403 `origin_not_allowed`),
@@ -296,21 +296,21 @@ tuple of the 7 LLM-scored keys.
   `test_allows_cross_origin_get`, `test_closes_cross_origin_websocket_with_4403`,
   `test_allows_websocket_without_origin`. Run → FAIL. Implement `app/core/request_guard.py`.
   Run → PASS.
-- [ ] 0.2.11 Implement `app/main.py` `create_app()`: configure logging, `RequestGuardMiddleware`
+- [x] 0.2.11 Implement `app/main.py` `create_app()`: configure logging, `RequestGuardMiddleware`
   (outermost), CORS (`allow_origins=settings.cors_origins, allow_credentials=True,
   allow_methods=["*"], allow_headers=["*"]`), error handlers, include `api/v1/router.py`
   (`APIRouter(prefix="/api/v1")`, empty for now), `title="Articulate AI API"`, `version="0.1.0"`.
   Test settings must include `test` in `allowed_hosts` (httpx uses `http://test`).
-- [ ] 0.2.12 Create the `app/domain/*` modules exactly as in Interfaces.
-- [ ] 0.2.13 Run `uv run ruff check . && uv run ruff format --check . && uv run mypy app` → clean;
+- [x] 0.2.12 Create the `app/domain/*` modules exactly as in Interfaces.
+- [x] 0.2.13 Run `uv run ruff check . && uv run ruff format --check . && uv run mypy app` → clean;
   `uv run pytest` → PASS.
-- [ ] 0.2.14 Commit: `feat(api): add app factory, settings, error envelope, logging and request guard`
+- [x] 0.2.14 Commit: `feat(api): add app factory, settings, error envelope, logging and request guard`
 
 **Acceptance criteria:**
-- [ ] `uv run uvicorn app.main:app --host 127.0.0.1 --port 8000` starts; `GET /docs` loads.
-- [ ] Production guard rejects dev-only providers and local auth mode.
-- [ ] Unknown errors never leak exception text.
-- [ ] Unknown hosts and cross-site origins are rejected; logs never show secrets.
+- [x] `uv run uvicorn app.main:app --host 127.0.0.1 --port 8000` starts; `GET /docs` loads.
+- [x] Production guard rejects dev-only providers and local auth mode.
+- [x] Unknown errors never leak exception text.
+- [x] Unknown hosts and cross-site origins are rejected; logs never show secrets.
 
 **Pitfalls:** pydantic-settings parses `list[str]` env values as JSON unless annotated with
 `NoDecode`; `SecretStr` must be unwrapped with `.get_secret_value()` only inside adapters.
