@@ -12,6 +12,7 @@ from app.core.db import create_engine, create_session_factory
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.core.request_guard import RequestGuardMiddleware
+from app.worker.broker import broker
 
 
 @asynccontextmanager
@@ -20,9 +21,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_engine(settings.database_url)
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine)
+    if not broker.is_worker_process:
+        await broker.startup()
     try:
         yield
     finally:
+        if not broker.is_worker_process:
+            await broker.shutdown()
         await engine.dispose()
 
 

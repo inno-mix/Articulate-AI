@@ -520,24 +520,27 @@ Worker DB access pattern (used by later phases): tasks open their own session wi
 current Taskiq API for worker startup events).
 
 **Subtasks:**
-- [ ] 0.5.1 Write failing test `test_ping_task_runs_in_memory_broker` — `await ping.kiq("x")`, then
+- [x] 0.5.1 Write failing test `test_ping_task_runs_in_memory_broker` — `await ping.kiq("x")`, then
   `result = await task.wait_result(timeout=2)`, `result.return_value == "pong:x"`.
-- [ ] 0.5.2 Run → FAIL. Implement broker + task. In `create_app` lifespan call
+- [x] 0.5.2 Run → FAIL. Implement broker + task. In `create_app` lifespan call
   `await broker.startup()` / `await broker.shutdown()` unless `broker.is_worker_process`.
-- [ ] 0.5.3 Run → PASS.
-- [ ] 0.5.4 Manual check: `pnpm run dev:worker` starts and logs readiness; from a Python shell
+- [x] 0.5.3 Run → PASS.
+- [x] 0.5.4 Manual check: `pnpm run dev:worker` starts and logs readiness; from a Python shell
   (`uv run python -c "import asyncio; from app.worker.tasks.system import ping; ..."`) enqueue
   `ping` and see it processed in the worker log.
-- [ ] 0.5.5 Commit: `feat(api): add taskiq broker and worker process`
+- [x] 0.5.5 Commit: `feat(api): add taskiq broker and worker process`
 
 **Acceptance criteria:**
-- [ ] `make dev` runs a worker that processes enqueued tasks from Redis.
-- [ ] Tests never need Redis for task execution.
+- [x] `make dev` runs a worker that processes enqueued tasks from Redis.
+- [x] Tests never need Redis for task execution.
 
 **Pitfalls:** `taskiq_fastapi.init` must point to the importable app path; the worker imports the
 app module, so `create_app()` must not connect to anything at import time (only in lifespan).
 The broker is chosen from settings **at import time**, so tests must set `APP_ENV=test` before
 importing `app` (done at the top of `tests/conftest.py`).
+redis-py 8 sets a default 5 s socket timeout, which kills taskiq-redis's blocking `BRPOP` every 5 s
+(worker processes crash and restart). The broker is created with `socket_timeout=None` (regression
+test `test_redis_broker_waits_for_jobs_without_socket_timeout`).
 
 ---
 
