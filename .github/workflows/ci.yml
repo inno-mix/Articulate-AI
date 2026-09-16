@@ -1,0 +1,58 @@
+# Mirrors `make check` (lint, generated-client check, tests). E2E runs locally at phase end.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: articulate
+          POSTGRES_PASSWORD: articulate
+          POSTGRES_DB: articulate
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U articulate -d articulate"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # Service containers can't mount infra/initdb, so create the test databases here.
+      - name: Create test databases
+        env:
+          PGPASSWORD: articulate
+        run: psql -h localhost -U articulate -d articulate -v ON_ERROR_STOP=1 -f infra/initdb/01-create-databases.sql
+
+      - uses: astral-sh/setup-uv@v10.1.0 # no floating major tag for v10
+
+      - uses: pnpm/action-setup@v6 # version from "packageManager" in package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: SKIP_PLAYWRIGHT=1 make setup
+
+      - name: Lint, check generated client, test
+        run: make lint check-client test

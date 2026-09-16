@@ -1,6 +1,8 @@
 packages:
   - "apps/web"
 
+# Install scripts we don't need: msw only copies a browser worker (tests use msw/node).
 ignoredBuiltDependencies:
+  - msw
   - sharp
   - unrs-resolver

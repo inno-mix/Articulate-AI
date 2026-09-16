@@ -4,8 +4,8 @@ An AI communication coach for software engineers who want to communicate well in
 Practise real workplace conversations by text or voice, get specific feedback, train your
 pronunciation, and track your progress.
 
-> **Status:** planning complete — implementation starts with
-> [Phase 0](docs/tasks/q1-phase-00-foundations.md).
+> **Status:** Phase 0 (foundations) done — next is
+> [Phase 1: text practice](docs/tasks/q1-phase-01-text-practice.md).
 
 ## Features (planned)
 - Scenario role-play (stand-ups, PM conversations, interviews, code review, negotiations) — text & voice

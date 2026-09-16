@@ -688,23 +688,23 @@ changing them. openapi-fetch paths include `/api/v1`, so the client `baseUrl` mu
 `docs/tasks/README.md` status.
 
 **Subtasks:**
-- [ ] 0.8.1 Ensure `make lint`, `make check-client`, `make test` and `make check` work from a clean
+- [x] 0.8.1 Ensure `make lint`, `make check-client`, `make test` and `make check` work from a clean
   checkout (after `make setup infra-up`). `check-client` must fail if `openapi.json` or
   `schema.ts` differ after regeneration — verify by adding a dummy field to a schema, running
   `make check-client` (expect FAIL), then reverting.
-- [ ] 0.8.2 Create `.github/workflows/ci.yml`: on push/PR; job `check` on `ubuntu-latest` with
+- [x] 0.8.2 Create `.github/workflows/ci.yml`: on push/PR; job `check` on `ubuntu-latest` with
   services `postgres:17-alpine` (env as compose; run the initdb SQL with `psql` in a step) and
   `redis:7-alpine`; steps: checkout → `astral-sh/setup-uv` → `pnpm/action-setup` →
   `actions/setup-node` (node 22, pnpm cache) → `make setup` (skip Playwright browsers via
   `SKIP_PLAYWRIGHT=1` support in the Makefile) → `make lint check-client test`.
   Look up current major versions of these actions before writing.
-- [ ] 0.8.3 Run `make check` locally → PASS; paste the last lines into the completion log.
-- [ ] 0.8.4 Update `AGENTS.md` status line ("Phase 0 done; next: Phase 1") and the roadmap table.
-- [ ] 0.8.5 Commit: `chore: add make check and ci workflow`
+- [x] 0.8.3 Run `make check` locally → PASS; paste the last lines into the completion log.
+- [x] 0.8.4 Update `AGENTS.md` status line ("Phase 0 done; next: Phase 1") and the roadmap table.
+- [x] 0.8.5 Commit: `chore: add make check and ci workflow`
 
 **Acceptance criteria:**
-- [ ] `make check` passes locally.
-- [ ] CI file is valid YAML and mirrors `make check` (it runs once the repo is pushed to GitHub).
+- [x] `make check` passes locally.
+- [x] CI file is valid YAML and mirrors `make check` (it runs once the repo is pushed to GitHub).
 
 ---
 
@@ -741,3 +741,19 @@ changing them. openapi-fetch paths include `/api/v1`, so the client `baseUrl` mu
   desktop app's `preview_start` fails here with `getcwd: Operation not permitted` (macOS
   Documents-folder permission for the app) — start `make dev` in a terminal and open the pane by
   URL instead · Follow-ups: none
+- 2026-09-17 · Task 0.8 · (this commit) · `make check` exit 0 — "All checks passed!", "61 files
+  already formatted", "Success: no issues found in 36 source files", "All matched files use
+  Prettier code style!", "53 passed", "Tests  9 passed (9)"; `make check-client` exit 2 with a
+  dummy `HealthOut` field, exit 0 after reverting; fresh clone: `SKIP_PLAYWRIGHT=1 make setup` +
+  `make lint check-client test` exit 0; `ci.yml` parses (actionlint not installed) · Notes:
+  actions checked 2026-09-17 — checkout v7, setup-node v7, pnpm/action-setup v6, setup-uv pinned
+  to v10.1.0 (no floating `v10` tag); msw added to `ignoredBuiltDependencies` (its install script
+  only copies a browser worker) · Follow-ups: CI has not run yet (repo not on GitHub)
+- 2026-09-17 · Phase verification · 1: infra down/up, `make db-reset FORCE=1` (backup written),
+  `make dev` → "API: ok", fresh tab has no console errors, `GET /api/v1/health` 200 · 2: not done
+  by stopping the owner's Ollama app; instead an API with an unreachable `OLLAMA_BASE_URL`
+  returned `{"status":"degraded",…,"llm":"unavailable"}` and the badge's degraded state is
+  covered by the component test · 3: `/me` returns the local user · 4: `make check` and
+  `make test-e2e` (2 passed) pass · 5: E2E ran *while* `make dev` was running; a marker written to
+  the dev profile survived and dev stayed healthy (marker reverted) · 6: `git status` clean after
+  the commit
