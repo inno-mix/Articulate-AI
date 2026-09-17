@@ -526,20 +526,20 @@ export function useChatStream(sessionId: string): {
   `DELETE /sessions/{id}` → row disappears (toast on error).
 
 **Subtasks:**
-- [ ] 1.7.1 Failing tests `sse.test.ts`: parses events split across chunks; multiple events in one
+- [x] 1.7.1 Failing tests `sse.test.ts`: parses events split across chunks; multiple events in one
   chunk; non-2xx JSON response throws `ApiError`; abort stops reading.
-- [ ] 1.7.2 Failing component tests: streaming text appears incrementally then becomes a message;
+- [x] 1.7.2 Failing component tests: streaming text appears incrementally then becomes a message;
   send disabled while streaming; Enter sends and Shift+Enter doesn't; error event shows
   "Try again" which re-sends; hint callout "Use this" fills composer; end dialog warns under 2
   turns; ended session disables composer; history "Load more" appends; history delete asks for
   confirmation and removes the row after success.
-- [ ] 1.7.3 Run → FAIL. Implement. Run → PASS. `make lint`.
-- [ ] 1.7.4 Browser check with Ollama (`make dev`): full conversation of 3 turns, hint, end.
+- [x] 1.7.3 Run → FAIL. Implement. Run → PASS. `make lint`.
+- [x] 1.7.4 Browser check with Ollama (`make dev`): full conversation of 3 turns, hint, end.
   Check console + network (SSE request stays open and closes after `done`).
-- [ ] 1.7.5 Commit: `feat(web): add text practice session and history pages`
+- [x] 1.7.5 Commit: `feat(web): add text practice session and history pages`
 
 **Acceptance criteria:**
-- [ ] A user can hold a streamed conversation, use hints, end the session, and see it in history.
+- [x] A user can hold a streamed conversation, use hints, end the session, and see it in history.
 
 **Pitfalls:** React strict mode double-invokes effects in dev — don't start streams in effects;
 start them from event handlers. Keep `AbortController` per send.
@@ -576,6 +576,22 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-18 · Task 1.7 · (this commit) · `pnpm --filter web test` 29 passed (7 files);
+  `pnpm typecheck`/`pnpm lint`/`prettier --check` clean; `make check` green; browser check against
+  `make dev` with real Ollama: a 3-turn text conversation streamed correctly (composer and "End
+  session" disabled mid-stream, typing cursor visible, turns-left decremented after each `done`),
+  hint → callout → "Use this" filled the composer, ending showed the correct dialog copy for a
+  2-turn session and the "Session ended" panel with a still-visible-but-disabled composer, History
+  listed the session and its delete flow (confirm dialog → 204 → row removed) worked; every
+  `POST .../messages` request showed as completed (200 OK), never left open; console was clean on
+  a fresh load · Notes: found two real bugs during the browser check, both fixed and covered by
+  the existing test run: (1) `Transcript`'s scroll container needed `h-full`, not just
+  `overflow-y-auto` — without an explicit height a flex child with only `flex-1` doesn't cap its
+  own box, so a long reply grew the whole page and the composer scrolled out from under it instead
+  of the transcript scrolling internally; (2) `<Button render={<Link .../>}>` needs
+  `nativeButton={false}` — Base UI's `Button` assumes `render` still produces a `<button>` unless
+  told otherwise, and logged a console error each time "Back to practice" rendered · Follow-ups:
+  none
 - 2026-09-18 · Task 1.6 · (this commit) · `pnpm --filter web test` 17 passed (4 files);
   `pnpm typecheck`/`pnpm lint`/`prettier --check` clean; `make check` green; browser check against
   `make dev` with real Ollama: all 15 practice scenarios listed, category/difficulty/mode filters
