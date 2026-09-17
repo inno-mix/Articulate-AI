@@ -11,7 +11,7 @@
 | Phase | File | Milestone | Depends on | Status |
 |---|---|---|---|---|
 | 0 | [Foundations](q1-phase-00-foundations.md) | Q1 | – | Done (2026-09-17) |
-| 1 | [Text practice](q1-phase-01-text-practice.md) | Q1 | 0 | Not started |
+| 1 | [Text practice](q1-phase-01-text-practice.md) | Q1 | 0 | Done (2026-09-18) |
 | 2 | [Feedback engine](q1-phase-02-feedback-engine.md) | Q1 | 1 | Not started |
 | 3 | [Voice practice](q1-phase-03-voice.md) | Q1 | 2 · Deepgram key | Not started |
 | 4 | [Pronunciation practice](q1-phase-04-pronunciation.md) | Q1 | 0, 3 (audio libs, TTS) · Azure key | Not started |

@@ -7,7 +7,7 @@ import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useScenario } from "@/features/scenarios/hooks/use-scenario";
-import { errorMessage } from "@/lib/api/errors";
+import { ApiError, errorMessage } from "@/lib/api/errors";
 
 import { useChatStream } from "../hooks/use-chat-stream";
 import { useEndSession } from "../hooks/use-end-session";
@@ -43,9 +43,11 @@ export function SessionView({ sessionId }: { sessionId: string }) {
     return <SessionSkeleton />;
   }
   if (session.isError || scenario.isError || !session.data || !scenario.data) {
+    const failure = session.error ?? scenario.error;
+    const code = failure instanceof ApiError ? failure.code : "internal_error";
     return (
       <ErrorState
-        message="Couldn't load this session."
+        message={errorMessage(code)}
         onRetry={() => {
           void session.refetch();
           void scenario.refetch();

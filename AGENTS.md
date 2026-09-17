@@ -2,7 +2,7 @@
 
 AI communication coach for software engineers improving their English. Text + voice role-play
 practice, feedback reports, pronunciation practice, progress tracking.
-**Status:** Phase 0 (foundations) done. Next: Phase 1 — `docs/tasks/q1-phase-01-text-practice.md`.
+**Status:** Phase 1 (text practice) done. Next: Phase 2 — `docs/tasks/q1-phase-02-feedback-engine.md`.
 
 ## Read first
 1. `docs/guides/agent-workflow.md` — how to work here (task loop, hard rules, definition of done).
