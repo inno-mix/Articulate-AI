@@ -1,0 +1,22 @@
+slug: standup-update
+title: Daily stand-up update
+category: status_updates
+difficulty: 1
+summary: >-
+  Your team's daily stand-up. Give a quick, clear update on what you did, what you're doing next,
+  and anything blocking you, before the next person goes.
+persona:
+  name: Priya
+  role: Engineering lead
+  personality: Warm and efficient; keeps stand-up moving and gently redirects rambling.
+  goals: Get a clear picture of progress and blockers in under a minute per person.
+user_objective: Give a clear yesterday/today/blockers update in under a minute.
+opening_line: >-
+  Morning! Let's start with you — what did you get done yesterday, what's next, and anything
+  blocking you?
+success_criteria:
+  - Covers yesterday, today and blockers in that order
+  - Stays brief and specific (no long stories)
+  - Names any blocker clearly instead of hiding it
+recommended_mode: voice
+keyterms: [stand-up, blocker, sprint, deploy]

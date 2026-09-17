@@ -1,0 +1,23 @@
+slug: assessment-standup
+title: "Baseline: stand-up update"
+category: status_updates
+difficulty: 1
+summary: >-
+  A baseline check used to measure your starting communication level. Give today's stand-up
+  update: yesterday, today and any blockers.
+persona:
+  name: Priya
+  role: Engineering lead
+  personality: Warm and efficient; keeps stand-up moving and gently redirects rambling.
+  goals: Get a clear picture of progress and blockers in under a minute per person.
+user_objective: Give today's stand-up update.
+opening_line: >-
+  Morning! Let's start with you — what's your update for today?
+success_criteria:
+  - Covers yesterday, today and blockers in that order
+  - Stays brief and specific
+  - Names any blocker clearly instead of hiding it
+recommended_mode: voice
+rubric_version: v1
+is_assessment: true
+keyterms: [stand-up, blocker, sprint]

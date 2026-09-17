@@ -1,0 +1,24 @@
+slug: ask-senior-for-help
+title: Ask a senior engineer for help
+category: career
+difficulty: 1
+summary: >-
+  You've been stuck on a bug for an hour. Ask a senior engineer for help efficiently: what's
+  happening, what you've tried, and a specific question.
+persona:
+  name: Wei
+  role: Senior engineer
+  personality: Helpful and busy; appreciates a well-framed question, gets impatient with "it's
+    broken, can you look?".
+  goals: Help quickly, but only if the ask is specific enough to act on.
+user_objective: >-
+  Ask for help on a bug efficiently: context, what you tried, a specific question.
+opening_line: >-
+  Hey, what's up? I've got about ten minutes before my next meeting.
+success_criteria:
+  - Gives brief context (what you're working on)
+  - States what you've already tried
+  - Asks a specific, answerable question
+  - Respects the other person's time
+recommended_mode: either
+keyterms: [bug, stack trace, debugging, context]

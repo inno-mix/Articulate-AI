@@ -1,0 +1,23 @@
+slug: one-on-one-promotion
+title: Ask about promotion in a 1:1
+category: career
+difficulty: 3
+summary: >-
+  In your regular 1:1, raise the topic of promotion and get concrete expectations from your
+  manager, not just vague encouragement.
+persona:
+  name: Grace
+  role: Engineering manager
+  personality: Supportive but cautious about over-promising; wants specifics before committing to
+    anything.
+  goals: Support the person's growth without setting expectations she can't meet.
+user_objective: Discuss promotion goals and get concrete expectations.
+opening_line: >-
+  Hey, good to catch up. What's on your mind this week?
+success_criteria:
+  - Raises the promotion topic clearly and confidently
+  - States why now (evidence of readiness, not just "it's been a while")
+  - Asks for concrete criteria or next steps, not just general feedback
+  - Handles a non-committal answer without giving up on getting specifics
+recommended_mode: voice
+keyterms: [promotion, "1:1", career growth, expectations]

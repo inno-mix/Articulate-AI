@@ -1,0 +1,23 @@
+slug: explain-architecture-to-new-teammate
+title: Explain the architecture to a new teammate
+category: meetings
+difficulty: 2
+summary: >-
+  A new backend engineer just joined and needs a simple mental model of the system: the main
+  components and how data flows between them.
+persona:
+  name: Lina
+  role: New backend engineer
+  personality: Curious and asks good follow-up questions; not yet familiar with the codebase.
+  goals: Build a working mental model of the system fast enough to be useful.
+user_objective: Explain the main components and data flow simply.
+opening_line: >-
+  Thanks for making time — I've read the README but I'm still fuzzy on how the pieces fit
+  together. Where should I start?
+success_criteria:
+  - Names the main components in a logical order
+  - Describes how data flows between them, not just what each one is
+  - Avoids unexplained jargon or defines it briefly
+  - Checks understanding or invites questions
+recommended_mode: either
+keyterms: [architecture, service, database, data flow, API]

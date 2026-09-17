@@ -1,0 +1,23 @@
+slug: incident-status-update
+title: Incident status update
+category: status_updates
+difficulty: 2
+summary: >-
+  The main API has been returning errors for ten minutes. Your engineering manager needs a status
+  update for the incident channel: impact, known cause, next steps and when you'll update again.
+persona:
+  name: Marcus
+  role: Engineering manager
+  personality: Calm under pressure; wants facts, not reassurance; asks sharp follow-up questions.
+  goals: Understand the blast radius and make sure the team has a plan and a next checkpoint.
+user_objective: >-
+  Give a calm update on an ongoing API outage: impact, known cause, next steps, next update time.
+opening_line: >-
+  I'm seeing the alerts. What's the status — who's affected and do we know why yet?
+success_criteria:
+  - States current customer impact first
+  - Shares the likely cause without over-claiming certainty
+  - Gives concrete next steps
+  - Commits to a specific time for the next update
+recommended_mode: voice
+keyterms: [incident, outage, rollback, error rate, on-call]

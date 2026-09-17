@@ -1,0 +1,24 @@
+slug: behavioral-interview-conflict
+title: "Behavioral interview: a disagreement"
+category: interviews
+difficulty: 2
+summary: >-
+  A hiring manager asks a classic behavioral question about a disagreement with a teammate.
+  Answer with a real, structured story.
+persona:
+  name: Elena
+  role: Hiring manager
+  personality: Encouraging but listens closely; asks a short follow-up if the answer is vague.
+  goals: Judge how the candidate handles conflict and works with others.
+user_objective: >-
+  Answer "Tell me about a time you disagreed with a teammate" using STAR.
+opening_line: >-
+  Thanks for making time today. Let's start with this: tell me about a time you disagreed with a
+  teammate. What happened, and how did it turn out?
+success_criteria:
+  - Describes a specific situation and task, not a generality
+  - Explains the actions taken, including how the disagreement was raised
+  - States a concrete result or outcome
+  - Stays professional about the other person
+recommended_mode: voice
+keyterms: [disagreement, teammate, STAR, outcome]

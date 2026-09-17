@@ -1,0 +1,24 @@
+slug: assessment-explain-your-project
+title: "Baseline: explain your project"
+category: stakeholder_communication
+difficulty: 1
+summary: >-
+  A baseline check used to measure your starting communication level. Explain what your current
+  project does and why it matters to a new product manager who has just joined.
+persona:
+  name: Jordan
+  role: New product manager
+  personality: Genuinely curious and easy to talk to; asks simple, direct questions.
+  goals: Get a clear, honest picture of the project without needing technical background.
+user_objective: Explain what your current project does and why it matters.
+opening_line: >-
+  Hi! I just joined and I'm still getting oriented. Can you tell me about the project you're
+  working on and why it matters?
+success_criteria:
+  - States what the project does in plain language
+  - Explains why it matters (to users or the business)
+  - Keeps the explanation clear for a non-technical listener
+recommended_mode: text
+rubric_version: v1
+is_assessment: true
+keyterms: [project, product, users]

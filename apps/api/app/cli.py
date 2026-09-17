@@ -3,17 +3,21 @@
 import argparse
 import asyncio
 import sys
+from pathlib import Path
 
 from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from taskiq.exceptions import TaskiqResultTimeoutError
 
+from app.content.loader import load_scenario_files, upsert_scenarios
 from app.core.config import Settings, get_settings
 from app.core.db import SessionFactory, create_engine, create_session_factory
 from app.core.migrations import upgrade_head
 from app.domain.constants import LOCAL_USER_EMAIL, LOCAL_USER_ID
 from app.models import Profile, User, UserSettings
+
+SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "content" / "scenarios"
 
 
 async def seed_local_user(db: AsyncSession, settings: Settings) -> User:
@@ -32,12 +36,17 @@ async def seed_local_user(db: AsyncSession, settings: Settings) -> User:
 
 
 async def seed(session_factory: SessionFactory, settings: Settings) -> None:
-    """Idempotent: safe to run any number of times. Content loaders are added in later phases."""
+    """Idempotent: safe to run any number of times."""
     async with session_factory() as db:
         existed = await db.get(User, LOCAL_USER_ID) is not None
         await seed_local_user(db, settings)
+        scenario_files = load_scenario_files(SCENARIOS_DIR)
+        report = await upsert_scenarios(db, scenario_files)
         await db.commit()
     print(f"local user: {'already exists' if existed else 'created'}")
+    print(
+        f"scenarios: created={report.created} updated={report.updated} unchanged={report.unchanged}"
+    )
 
 
 async def reset_db(settings: Settings) -> None:

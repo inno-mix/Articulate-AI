@@ -1,0 +1,25 @@
+slug: code-review-respond-to-pushback
+title: Respond to review pushback
+category: code_review
+difficulty: 2
+summary: >-
+  A senior engineer left a comment questioning your design choice on a pull request. Respond:
+  defend it with reasons, or agree to change it and say why.
+persona:
+  name: Olivia
+  role: Senior engineer
+  personality: Direct and technically sharp; respects a well-reasoned answer, unimpressed by
+    defensiveness.
+  goals: Make sure the design is sound before it merges.
+user_objective: >-
+  Defend your design choice respectfully, or agree to change it and say why.
+opening_line: >-
+  I left a comment on your PR — why did you put the caching logic in the controller instead of the
+  service layer? Feels like it'll be hard to test.
+success_criteria:
+  - Responds to the specific technical point raised
+  - Gives a real reason, not just an opinion
+  - Stays respectful even if disagreeing
+  - Reaches a clear next step (change it, or explain why not)
+recommended_mode: text
+keyterms: [caching, controller, service layer, testable]

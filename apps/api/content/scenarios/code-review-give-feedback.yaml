@@ -1,0 +1,23 @@
+slug: code-review-give-feedback
+title: Give code review feedback
+category: code_review
+difficulty: 1
+summary: >-
+  A junior teammate opened a pull request with two real problems: no input validation and a query
+  that will be slow at scale. Explain both kindly and clearly.
+persona:
+  name: Sam
+  role: Junior developer
+  personality: Eager and a little nervous about feedback; responds well to specific, kind notes.
+  goals: Get this PR merged and learn from the review.
+user_objective: Explain two important problems in Sam's pull request kindly and clearly.
+opening_line: >-
+  Hey, thanks for reviewing my PR! Let me know what you think — I want to get this merged today
+  if possible.
+success_criteria:
+  - Names both problems specifically (what and why it matters)
+  - Explains the impact, not just "this is wrong"
+  - Uses a kind, collaborative tone
+  - Suggests a concrete next step or fix
+recommended_mode: text
+keyterms: [pull request, input validation, query, merge]

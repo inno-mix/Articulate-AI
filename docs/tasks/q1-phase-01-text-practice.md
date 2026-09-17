@@ -130,25 +130,25 @@ keyterms: [refactoring, payments module, sprint, regression]
 ```
 
 **Subtasks:**
-- [ ] 1.1.1 Write failing tests `tests/unit/content/test_loader.py`:
+- [x] 1.1.1 Write failing tests `tests/unit/content/test_loader.py`:
   - `test_loads_all_repository_scenarios` — loads `content/scenarios`, 17 files, 2 with
     `is_assessment`, slugs match file names.
   - `test_rejects_unknown_key_with_file_name_in_error` (tmp dir)
   - `test_rejects_invalid_difficulty`
   - `test_rejects_duplicate_slugs`
   - `test_content_hash_is_stable_and_changes_with_content`
-- [ ] 1.1.2 Add integration tests (extend `test_seed.py`):
+- [x] 1.1.2 Add integration tests (extend `test_seed.py`):
   - `test_seed_upserts_scenarios_idempotently` — second run reports 0 created, 0 updated.
   - `test_seed_updates_changed_scenario` — modify a loaded object's title → updated = 1.
-- [ ] 1.1.3 Run → FAIL. Implement enums, model, migration (review by hand), loader, seed wiring.
+- [x] 1.1.3 Run → FAIL. Implement enums, model, migration (review by hand), loader, seed wiring.
   Write all 17 YAML files per the catalogue (opening lines in character; 3–4 success criteria each;
   keyterms where technical).
-- [ ] 1.1.4 Run → PASS; `make seed` on dev DB → prints `scenarios: created=17`.
-- [ ] 1.1.5 Commit: `feat(api): add scenario model, content files and loader`
+- [x] 1.1.4 Run → PASS; `make seed` on dev DB → prints `scenarios: created=17`.
+- [x] 1.1.5 Commit: `feat(api): add scenario model, content files and loader`
 
 **Acceptance criteria:**
-- [ ] All 17 scenarios load; an invalid file fails with its file name in the error.
-- [ ] Re-seeding is idempotent; changed YAML updates the row.
+- [x] All 17 scenarios load; an invalid file fails with its file name in the error.
+- [x] Re-seeding is idempotent; changed YAML updates the row.
 
 ---
 
@@ -576,3 +576,8 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+
+- 2026-09-17 · Task 1.1 · (this commit) · `uv run pytest` 62 passed; `make seed` on dev DB →
+  "scenarios: created=17 updated=0 unchanged=0", re-run → "created=0 updated=0 unchanged=17";
+  `make check` green · Notes: YAML parses bare `1:1` as an int (sexagesimal) — quoted it in
+  `one-on-one-promotion.yaml`'s keyterms · Follow-ups: none

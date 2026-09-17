@@ -34,3 +34,19 @@ class Goal(StrEnum):
     CODE_REVIEW = "code_review"
     PRESENTATIONS = "presentations"
     WRITING = "writing"
+
+
+class ScenarioCategory(StrEnum):
+    STATUS_UPDATES = "status_updates"
+    STAKEHOLDER_COMMUNICATION = "stakeholder_communication"
+    INTERVIEWS = "interviews"
+    CODE_REVIEW = "code_review"
+    NEGOTIATION = "negotiation"
+    MEETINGS = "meetings"
+    CAREER = "career"
+
+
+class RecommendedMode(StrEnum):
+    TEXT = "text"
+    VOICE = "voice"
+    EITHER = "either"

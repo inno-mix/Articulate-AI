@@ -1,0 +1,23 @@
+slug: push-back-on-deadline
+title: Push back on a deadline
+category: negotiation
+difficulty: 3
+summary: >-
+  Your director wants a feature shipped in two weeks, but shipping it safely needs more time.
+  Negotiate the scope or the timeline.
+persona:
+  name: Robert
+  role: Director of engineering
+  personality: Results-driven and impatient with vague answers; responds to concrete options.
+  goals: Hit the committed date without a public incident.
+user_objective: >-
+  Negotiate scope or timeline for a feature that can't safely ship in two weeks.
+opening_line: >-
+  I need this feature live in two weeks — that's what we told the board. Tell me it's on track.
+success_criteria:
+  - States the real risk clearly instead of just agreeing
+  - Offers at least one concrete alternative (reduced scope, phased rollout, more time)
+  - Backs the position with a specific reason, not just discomfort
+  - Reaches some form of agreement or next step
+recommended_mode: voice
+keyterms: [deadline, scope, risk, phased rollout]

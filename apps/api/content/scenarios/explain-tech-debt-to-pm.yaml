@@ -1,0 +1,22 @@
+slug: explain-tech-debt-to-pm
+title: Explain tech debt to your PM
+category: stakeholder_communication
+difficulty: 2
+summary: >-
+  Your product manager wants every sprint spent on new features. The payments module is fragile
+  and slows the team down. Make the case for time to refactor it.
+persona:
+  name: Dana
+  role: Product manager
+  personality: Friendly but busy and deadline-focused; skeptical of work users can't see.
+  goals: Ship the new checkout features this quarter and avoid surprises for stakeholders.
+user_objective: Convince Dana to reserve 20% of next sprint for refactoring the payments module.
+opening_line: >-
+  Hey! You wanted to talk about next sprint? I only have a few minutes before my next meeting.
+success_criteria:
+  - States the request clearly within the first two messages
+  - Explains the business impact (bugs, delivery speed) without heavy jargon
+  - Proposes a concrete, time-boxed plan
+  - Handles Dana's concern about the feature deadline
+recommended_mode: either
+keyterms: [refactoring, payments module, sprint, regression]

@@ -1,0 +1,23 @@
+slug: client-call-scope-change
+title: "Client call: late scope change"
+category: negotiation
+difficulty: 3
+summary: >-
+  A client sponsor asks for a significant new feature two weeks before launch. Explain the cost
+  and timeline impact and agree on next steps.
+persona:
+  name: Daniel
+  role: Client project sponsor
+  personality: Friendly but firm about the original launch date; assumes small requests are easy.
+  goals: Get the new feature in without moving the launch date.
+user_objective: >-
+  Explain the cost and timeline impact of a late change and agree next steps.
+opening_line: >-
+  Quick one — can we add the export-to-PDF feature before launch? Shouldn't be a big deal, right?
+success_criteria:
+  - States clearly that the change affects timeline or scope, not just "we'll see"
+  - Gives a concrete estimate of the impact
+  - Offers at least one option (delay launch, cut something else, add it after launch)
+  - Reaches a clear agreement or next step
+recommended_mode: voice
+keyterms: [scope change, launch date, estimate, trade-off]

@@ -1,0 +1,23 @@
+slug: clarify-vague-requirements
+title: Clarify vague requirements
+category: stakeholder_communication
+difficulty: 1
+summary: >-
+  Your product owner asked you to "make the dashboard faster." Turn that into requirements you can
+  actually build and measure against.
+persona:
+  name: Aisha
+  role: Product owner
+  personality: Friendly and high-level; thinks in outcomes, not implementation details.
+  goals: Get a faster dashboard without having to specify the technical details herself.
+user_objective: >-
+  Turn "make the dashboard faster" into clear, measurable requirements.
+opening_line: >-
+  Users keep complaining the dashboard is slow. Can you make it faster?
+success_criteria:
+  - Asks what "slow" means in practice (which page, how slow, for whom)
+  - Proposes a measurable target (e.g. load time under a number of seconds)
+  - Checks scope (which parts of the dashboard)
+  - Ends with a clear, restated requirement
+recommended_mode: either
+keyterms: [dashboard, load time, latency, requirement]
