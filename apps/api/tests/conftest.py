@@ -10,6 +10,7 @@ from collections.abc import AsyncIterator  # noqa: E402
 import httpx  # noqa: E402
 import pytest  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
+from redis.asyncio import Redis  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession  # noqa: E402
 
 from app.core.config import Settings, get_settings  # noqa: E402
@@ -76,14 +77,31 @@ def session_factory(connection: AsyncConnection) -> LockedSessionFactory:
     return LockedSessionFactory(connection)
 
 
+@pytest.fixture(scope="session")
+async def redis_client(settings: Settings) -> AsyncIterator[Redis]:
+    client: Redis = Redis.from_url(settings.redis_url)
+    yield client
+    await client.aclose()
+
+
+@pytest.fixture(scope="module", autouse=True)
+async def _flush_test_redis(redis_client: Redis) -> None:
+    """Once per test module: locks and other Redis-only state don't outlive a module."""
+    await redis_client.flushdb()
+
+
 @pytest.fixture
 async def app(
-    settings: Settings, db: AsyncSession, session_factory: LockedSessionFactory
+    settings: Settings,
+    db: AsyncSession,
+    session_factory: LockedSessionFactory,
+    redis_client: Redis,
 ) -> FastAPI:
     from app.main import create_app
 
     application = create_app(settings)
     application.state.session_factory = session_factory
+    application.state.redis = redis_client
 
     async def override_get_db() -> AsyncIterator[AsyncSession]:
         try:

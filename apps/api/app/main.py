@@ -12,6 +12,7 @@ from app.core.config import Settings, get_settings
 from app.core.db import create_engine, create_session_factory
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
+from app.core.redis import create_redis_client
 from app.core.request_guard import RequestGuardMiddleware
 from app.worker.broker import broker
 
@@ -22,6 +23,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_engine(settings.database_url)
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine)
+    app.state.redis = create_redis_client(settings.redis_url)
     if not broker.is_worker_process:
         await broker.startup()
     try:
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     finally:
         if not broker.is_worker_process:
             await broker.shutdown()
+        await app.state.redis.aclose()
         await engine.dispose()
 
 

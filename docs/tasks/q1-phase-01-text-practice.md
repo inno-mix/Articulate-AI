@@ -405,10 +405,10 @@ Streaming rules:
   to save).
 
 **Subtasks:**
-- [ ] 1.5.1 Failing unit tests: `test_format_sse_serialises_json_on_one_line`;
+- [x] 1.5.1 Failing unit tests: `test_format_sse_serialises_json_on_one_line`;
   `test_build_history_merges_consecutive_user_messages`,
   `test_build_history_excludes_system_messages`, `test_build_history_keeps_opening_line`.
-- [ ] 1.5.2 Failing integration tests `test_messages_stream.py` (parse the body with a small
+- [x] 1.5.2 Failing integration tests `test_messages_stream.py` (parse the body with a small
   helper `parse_sse(text) -> list[tuple[event, dict]]` in `tests/helpers/sse.py`):
   - `test_stream_happy_path_event_order` → `user_message`, ≥1 `delta`, `assistant_message`,
     `done` with `turns_left == 19`; DB has 3 messages.
@@ -421,16 +421,16 @@ Streaming rules:
   - `test_turn_limit_returns_409` (factory session with `user_turns=20`)
   - `test_concurrent_message_returns_reply_in_progress` (pre-set the Redis lock key)
   - `test_usage_event_recorded_for_reply`
-- [ ] 1.5.3 Failing integration tests `test_hint.py`: `test_hint_returns_text`,
+- [x] 1.5.3 Failing integration tests `test_hint.py`: `test_hint_returns_text`,
   `test_hint_on_ended_session_returns_409`, `test_hint_llm_unavailable_returns_503`.
-- [ ] 1.5.4 Run → FAIL. Implement. Run → PASS. `make gen-client`.
-- [ ] 1.5.5 Manual check with Ollama: create a session via curl, then
+- [x] 1.5.4 Run → FAIL. Implement. Run → PASS. `make gen-client`.
+- [x] 1.5.5 Manual check with Ollama: create a session via curl, then
   `curl -N -X POST localhost:8000/api/v1/sessions/<id>/messages -H 'Content-Type: application/json' -d '{"content":"Hi Dana, do you have five minutes?"}'`
   → events arrive incrementally; first `delta` within ~3 s. Record timing.
-- [ ] 1.5.6 Commit: `feat(api): stream persona replies over sse and add hints`
+- [x] 1.5.6 Commit: `feat(api): stream persona replies over sse and add hints`
 
 **Acceptance criteria:**
-- [ ] Replies stream incrementally; disconnects stop generation; failures never leave a partial
+- [x] Replies stream incrementally; disconnects stop generation; failures never leave a partial
   assistant message; crisis path works without calling the LLM.
 
 **Pitfalls:** don't use the request-scoped `get_db` session inside the generator (its lifetime is
@@ -576,6 +576,19 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-17 · Task 1.5 · (this commit) · `uv run pytest` 139 passed, 2 deselected; `make check`
+  green; manual check against real Ollama (`llama3.2:latest`): created a session, streamed a
+  reply — first delta at 0.12 s, full reply in 3.0 s (57 delta events), events in the documented
+  order; hint endpoint returned a 24-word suggestion; server log shows no errors · Notes: the lock
+  is acquired inside `stream_reply`'s first `async with` block, and the endpoint "primes" the
+  generator (`await anext(generator)`) before constructing the `StreamingResponse` — this is how
+  a `ReplyInProgressError` still comes back as a normal JSON 409 despite `stream_reply`'s signature
+  only taking `redis` (not a pre-acquired lock object); `generate_hint` reuses its own `db` session
+  to record usage after the LLM call, since its signature has no `session_factory` param (unlike
+  `stream_reply`) — `db.commit()` returns the connection to the pool, so reusing the session
+  afterward doesn't hold it open during the call · Follow-ups: `llama3.2:latest` doesn't reliably
+  follow the "1-3 sentences, no lists" rule (the manual check got a 5-item numbered list) — a
+  prompt/model quality issue for Phase 2's evals (`make eval`), not a mechanical bug in this task
 - 2026-09-17 · Task 1.4 · (this commit) · `uv run pytest` 122 passed, 2 deselected; `make check`
   green · Notes: `add_message` re-locks the session row (`SELECT ... FOR UPDATE`) before computing
   the next `seq`, even though Task 1.4 itself never calls it concurrently — sets up the safe

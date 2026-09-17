@@ -88,6 +88,45 @@ class TurnLimitReachedError(AppError):
     message = "This session has reached its turn limit."
 
 
+class ReplyInProgressError(AppError):
+    status_code = 409
+    code = "reply_in_progress"
+    message = "A reply is already being generated."
+
+
+# The five codes below mirror `app/llm/errors.py`'s LLMError subclasses (api-contract.md's error
+# table) — the "AppError" suffix keeps them distinct where both are imported together, e.g. in
+# app/services/chat.py's LLMError -> AppError mapping.
+class LLMUnavailableAppError(AppError):
+    status_code = 503
+    code = "llm_unavailable"
+    message = "The AI model is unavailable right now. Please try again."
+
+
+class LLMInvalidOutputAppError(AppError):
+    status_code = 502
+    code = "llm_invalid_output"
+    message = "The AI model returned something we couldn't use. Please try again."
+
+
+class LLMRateLimitedAppError(AppError):
+    status_code = 429
+    code = "llm_rate_limited"
+    message = "Too many requests right now. Please wait a moment and try again."
+
+
+class LLMAuthFailedAppError(AppError):
+    status_code = 400
+    code = "llm_auth_failed"
+    message = "There's a problem with the configured AI provider's credentials."
+
+
+class LLMNotConfiguredAppError(AppError):
+    status_code = 409
+    code = "llm_not_configured"
+    message = "No AI provider is configured yet."
+
+
 async def _app_error_handler(request: Request, exc: Exception) -> JSONResponse:
     if not isinstance(exc, AppError):
         raise exc

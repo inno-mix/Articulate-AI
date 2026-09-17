@@ -3,13 +3,15 @@
 from typing import Annotated
 
 from fastapi import Depends, Request
+from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings
-from app.core.db import get_db
+from app.core.db import SessionFactory, get_db
 from app.core.errors import LocalUserMissingError, UnauthorizedError
+from app.core.redis import get_redis
 from app.domain.constants import LOCAL_USER_ID
 from app.llm.base import LLMService
 from app.llm.factory import get_llm_service
@@ -47,3 +49,16 @@ async def get_llm(user: CurrentUser, db: DbDep, settings: SettingsDep) -> LLMSer
 
 
 LLMDep = Annotated[LLMService, Depends(get_llm)]
+RedisDep = Annotated[Redis, Depends(get_redis)]
+
+
+def get_session_factory(request: Request) -> SessionFactory:
+    """The app's own session factory. Used by the SSE generator, which opens its own DB
+    sessions rather than holding the request-scoped one open across the stream
+    (see `app/services/chat.py`).
+    """
+    factory: SessionFactory = request.app.state.session_factory
+    return factory
+
+
+SessionFactoryDep = Annotated[SessionFactory, Depends(get_session_factory)]

@@ -1,12 +1,23 @@
+from collections.abc import AsyncIterator
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import StreamingResponse
 
-from app.deps import CurrentUser, DbDep, LLMDep
+from app.api.sse import sse_response
+from app.deps import CurrentUser, DbDep, LLMDep, RedisDep, SessionFactoryDep
 from app.domain.enums import SessionStatus
 from app.schemas.common import Page
-from app.schemas.session import CreateSessionIn, EndSessionOut, SessionDetail, SessionSummary
+from app.schemas.session import (
+    CreateSessionIn,
+    EndSessionOut,
+    HintOut,
+    SendMessageIn,
+    SessionDetail,
+    SessionSummary,
+)
+from app.services import chat as chat_service
 from app.services import sessions as sessions_service
 
 router = APIRouter(tags=["sessions"])
@@ -35,6 +46,41 @@ async def list_sessions(
 @router.get("/sessions/{session_id}")
 async def get_session(session_id: UUID, user: CurrentUser, db: DbDep) -> SessionDetail:
     return await sessions_service.get_session_detail(db, user.id, session_id)
+
+
+@router.post("/sessions/{session_id}/messages")
+async def stream_session_message(
+    session_id: UUID,
+    body: SendMessageIn,
+    user: CurrentUser,
+    db: DbDep,
+    llm: LLMDep,
+    redis: RedisDep,
+    session_factory: SessionFactoryDep,
+    request: Request,
+) -> StreamingResponse:
+    prepared = await chat_service.prepare_user_turn(db, user, session_id, body.content)
+
+    generator = chat_service.stream_reply(
+        session_factory, redis, llm, prepared, request.is_disconnected
+    )
+    # Drive the generator up to (and including) its first yield now, before the
+    # StreamingResponse exists: this is where the reply lock is acquired, so a
+    # `ReplyInProgressError` here is still a normal JSON error (api-contract.md §4).
+    first_event = await anext(generator)
+
+    async def primed() -> AsyncIterator[str]:
+        yield first_event
+        async for event in generator:
+            yield event
+
+    return sse_response(primed())
+
+
+@router.post("/sessions/{session_id}/hint")
+async def get_hint(session_id: UUID, user: CurrentUser, db: DbDep, llm: LLMDep) -> HintOut:
+    hint = await chat_service.generate_hint(db, user, session_id, llm)
+    return HintOut(hint=hint)
 
 
 @router.post("/sessions/{session_id}/end")

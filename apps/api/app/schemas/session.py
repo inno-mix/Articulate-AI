@@ -1,5 +1,8 @@
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
+
+from pydantic import Field
 
 from app.domain.enums import MessageRole, MessageSource, PracticeMode, SessionStatus
 from app.schemas.common import RequestModel, ResponseModel
@@ -8,6 +11,14 @@ from app.schemas.common import RequestModel, ResponseModel
 class CreateSessionIn(RequestModel):
     scenario_id: UUID
     mode: PracticeMode
+
+
+class SendMessageIn(RequestModel):
+    content: Annotated[str, Field(min_length=1, max_length=1000)]
+
+
+class HintOut(ResponseModel):
+    hint: str
 
 
 class ScenarioRef(ResponseModel):
