@@ -460,16 +460,16 @@ enable "Practice" in the app shell. Tests `tests/features/scenarios/*.test.tsx`.
   disabled while pending; errors show a toast with `errorMessage(code)`.
 
 **Subtasks:**
-- [ ] 1.6.1 Failing tests (MSW): library renders cards; changing category refetches with query;
+- [x] 1.6.1 Failing tests (MSW): library renders cards; changing category refetches with query;
   empty state when no results; error state with retry button; detail shows persona and criteria;
   "Start text practice" posts and navigates (mock `useRouter`); start failure shows toast.
-- [ ] 1.6.2 Run → FAIL. Implement. Run → PASS. `make lint`.
-- [ ] 1.6.3 Browser check (`make dev`): filters work, keyboard navigation reaches every card and
+- [x] 1.6.2 Run → FAIL. Implement. Run → PASS. `make lint`.
+- [x] 1.6.3 Browser check (`make dev`): filters work, keyboard navigation reaches every card and
   button, no console errors.
-- [ ] 1.6.4 Commit: `feat(web): add scenario library and detail pages`
+- [x] 1.6.4 Commit: `feat(web): add scenario library and detail pages`
 
 **Acceptance criteria:**
-- [ ] All 15 practice scenarios visible; filters correct; start creates a session.
+- [x] All 15 practice scenarios visible; filters correct; start creates a session.
 
 ---
 
@@ -576,6 +576,23 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-18 · Task 1.6 · (this commit) · `pnpm --filter web test` 17 passed (4 files);
+  `pnpm typecheck`/`pnpm lint`/`prettier --check` clean; `make check` green; browser check against
+  `make dev` with real Ollama: all 15 practice scenarios listed, category/difficulty/mode filters
+  work, detail page shows persona/goal/criteria, "Start text practice" posts `/sessions` (201) and
+  navigates (confirmed 404 on `/sessions/{id}` is expected — Task 1.7 builds that page), voice
+  button disabled with the documented tooltip, zero console errors on a fresh load · Notes: a
+  Client Component using `use(params)` needs a `<Suspense>` ancestor to be unit-testable, and even
+  wrapped it didn't reliably resolve in jsdom — switched the page to the simpler, more common
+  pattern: a thin `async` Server Component `page.tsx` that awaits `params` and passes `slug` as a
+  plain prop to a Client Component (`ScenarioDetailView`), which is what the tests exercise
+  directly; Base UI's `<Select.Value>` doesn't auto-derive an item's label from its children for a
+  controlled string value — rendered the raw value ("all") until given an explicit
+  `children={(value) => label}` function · Follow-ups: keyboard Enter-to-activate on a focused
+  card link didn't visibly navigate in the automated browser tool although Tab reachability and
+  focus-visible styling were both confirmed, and mouse activation works — plausibly a CDP/tooling
+  artifact rather than a code defect (no keydown handling exists anywhere in these components);
+  worth a human spot-check with a real keyboard
 - 2026-09-17 · Task 1.5 · (this commit) · `uv run pytest` 139 passed, 2 deselected; `make check`
   green; manual check against real Ollama (`llama3.2:latest`): created a session, streamed a
   reply — first delta at 0.12 s, full reply in 3.0 s (57 delta events), events in the documented

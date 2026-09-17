@@ -27,7 +27,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon; enabled: boolean
 // Items light up as their phase ships (docs/tasks/README.md).
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Home", icon: House, enabled: true },
-  { href: "/practice", label: "Practice", icon: MessagesSquare, enabled: false },
+  { href: "/practice", label: "Practice", icon: MessagesSquare, enabled: true },
   { href: "/sessions", label: "History", icon: History, enabled: false },
   { href: "/pronunciation", label: "Pronunciation", icon: AudioLines, enabled: false },
   { href: "/drills", label: "Drills", icon: Dumbbell, enabled: false },
