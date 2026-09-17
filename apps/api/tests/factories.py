@@ -2,10 +2,18 @@
 
 from uuid import UUID, uuid4
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.enums import RecommendedMode, ScenarioCategory
-from app.models import Profile, Scenario, User, UserSettings
+from app.domain.enums import (
+    MessageRole,
+    MessageSource,
+    PracticeMode,
+    RecommendedMode,
+    ScenarioCategory,
+    SessionStatus,
+)
+from app.models import Message, PracticeSession, Profile, Scenario, User, UserSettings
 
 DEFAULT_TTS_VOICE = "aura-2-thalia-en"
 
@@ -51,3 +59,49 @@ async def make_scenario(
     db.add(scenario)
     await db.flush()
     return scenario
+
+
+async def make_session(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    scenario_id: UUID,
+    mode: PracticeMode = PracticeMode.TEXT,
+    status: SessionStatus = SessionStatus.ACTIVE,
+    user_turns: int = 0,
+    llm_provider: str = "fake",
+    llm_model: str = "fake",
+) -> PracticeSession:
+    session = PracticeSession(
+        user_id=user_id,
+        scenario_id=scenario_id,
+        mode=mode,
+        status=status,
+        user_turns=user_turns,
+        llm_provider=llm_provider,
+        llm_model=llm_model,
+    )
+    db.add(session)
+    await db.flush()
+    return session
+
+
+async def make_message(
+    db: AsyncSession,
+    session: PracticeSession,
+    *,
+    role: MessageRole = MessageRole.USER,
+    content: str = "Hello.",
+    source: MessageSource = MessageSource.TEXT,
+) -> Message:
+    max_seq = await db.scalar(select(func.max(Message.seq)).where(Message.session_id == session.id))
+    message = Message(
+        session_id=session.id,
+        seq=0 if max_seq is None else max_seq + 1,
+        role=role,
+        content=content,
+        source=source,
+    )
+    db.add(message)
+    await db.flush()
+    return message

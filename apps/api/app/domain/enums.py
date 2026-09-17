@@ -50,3 +50,32 @@ class RecommendedMode(StrEnum):
     TEXT = "text"
     VOICE = "voice"
     EITHER = "either"
+
+
+class SessionStatus(StrEnum):
+    ACTIVE = "active"
+    ENDED = "ended"
+    ABANDONED = "abandoned"
+
+
+class SessionPurpose(StrEnum):
+    PRACTICE = "practice"
+    ASSESSMENT = "assessment"
+
+
+class MessageRole(StrEnum):
+    ASSISTANT = "assistant"
+    USER = "user"
+
+
+class MessageSource(StrEnum):
+    TEXT = "text"
+    VOICE = "voice"
+    SYSTEM = "system"
+
+
+class UsageKind(StrEnum):
+    LLM = "llm"
+    STT = "stt"
+    TTS = "tts"
+    PRONUNCIATION = "pronunciation"

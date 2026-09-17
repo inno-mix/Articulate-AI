@@ -9,3 +9,10 @@ class RequestModel(BaseModel):
 
 class ResponseModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+
+class Page[T](BaseModel):
+    """A cursor page (api-contract.md §1)."""
+
+    items: list[T]
+    next_cursor: str | None

@@ -320,13 +320,13 @@ validation that happens outside Pydantic, e.g. cursors), `SessionNotActiveError`
 `SessionSummary.overall_score` is always `null` in Phase 1.
 
 **Subtasks:**
-- [ ] 1.4.1 Failing unit tests: pagination round-trip and invalid cursor (→ 422); safety
+- [x] 1.4.1 Failing unit tests: pagination round-trip and invalid cursor (→ 422); safety
   parametrised positives ("I want to kill myself", "I've been thinking about suicide",
   "I want to end my life", "I KEEP wanting to HURT MYSELF") and negatives ("kill the process",
   "this bug is killing me", "the build died again"). Phrase matching may flag some harmless
   sentences that contain a listed phrase; that trade-off is accepted (safety first) — note it in
   the module docstring.
-- [ ] 1.4.2 Failing integration tests `test_sessions.py`:
+- [x] 1.4.2 Failing integration tests `test_sessions.py`:
   - `test_create_text_session_adds_opening_message` — 201, one assistant message `seq=0` with the
     scenario's opening line, `llm_provider`/`llm_model` from the fake.
   - `test_create_session_unknown_scenario_returns_404`
@@ -341,12 +341,12 @@ validation that happens outside Pydantic, e.g. cursors), `SessionNotActiveError`
   - `test_end_session_is_idempotent`
   - `test_delete_session_removes_it_and_its_messages` → 204; `GET` → 404; no message rows left
   - `test_delete_other_users_session_returns_404`
-- [ ] 1.4.3 Run → FAIL. Implement models + migration (review), services, router. Run → PASS.
+- [x] 1.4.3 Run → FAIL. Implement models + migration (review), services, router. Run → PASS.
   `make gen-client`.
-- [ ] 1.4.4 Commit: `feat(api): add practice sessions lifecycle endpoints`
+- [x] 1.4.4 Commit: `feat(api): add practice sessions lifecycle endpoints`
 
 **Acceptance criteria:**
-- [ ] Sessions are user-scoped; pagination stable; ending is idempotent; users can delete their
+- [x] Sessions are user-scoped; pagination stable; ending is idempotent; users can delete their
   own sessions (`DELETE /sessions/{id}`).
 
 ---
@@ -576,6 +576,13 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-17 · Task 1.4 · (this commit) · `uv run pytest` 122 passed, 2 deselected; `make check`
+  green · Notes: `add_message` re-locks the session row (`SELECT ... FOR UPDATE`) before computing
+  the next `seq`, even though Task 1.4 itself never calls it concurrently — sets up the safe
+  pattern Task 1.5's SSE endpoint needs; `Page` uses PEP 695 generic syntax (`class Page[T]`,
+  ruff UP046) instead of `typing.Generic`; the opening message's `source` is set to the session's
+  own mode (`text`/`voice`), not `"system"` — that value is reserved for the crisis safety message
+  (data-model.md) · Follow-ups: none
 - 2026-09-17 · Task 1.3 · (this commit) · `uv run pytest` 97 passed, 2 deselected (live);
   `make check` green; `make test-live` (real Ollama, `llama3.2:latest`) 2 passed — first token
   0.49–0.51 s, full 1-3 sentence reply 2.4–2.8 s (41–55 output tokens), structured `Echo` output

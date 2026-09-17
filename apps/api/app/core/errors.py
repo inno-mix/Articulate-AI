@@ -68,6 +68,26 @@ class LocalUserMissingError(AppError):
     message = "Run `make seed` to create the local user."
 
 
+class ValidationAppError(AppError):
+    """Validation that happens outside Pydantic, e.g. a malformed pagination cursor."""
+
+    status_code = 422
+    code = "validation_error"
+    message = "Some fields are invalid."
+
+
+class SessionNotActiveError(AppError):
+    status_code = 409
+    code = "session_not_active"
+    message = "This session has already ended."
+
+
+class TurnLimitReachedError(AppError):
+    status_code = 409
+    code = "turn_limit_reached"
+    message = "This session has reached its turn limit."
+
+
 async def _app_error_handler(request: Request, exc: Exception) -> JSONResponse:
     if not isinstance(exc, AppError):
         raise exc

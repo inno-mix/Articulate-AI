@@ -89,6 +89,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sessions */
+        get: operations["list_sessions"];
+        put?: never;
+        /** Create Session */
+        post: operations["create_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Session */
+        get: operations["get_session"];
+        put?: never;
+        post?: never;
+        /** Delete Session */
+        delete: operations["delete_session"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End Session */
+        post: operations["end_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -111,11 +164,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CreateSessionIn */
+        CreateSessionIn: {
+            mode: components["schemas"]["PracticeMode"];
+            /**
+             * Scenario Id
+             * Format: uuid
+             */
+            scenario_id: string;
+        };
         /**
          * Dimension
          * @enum {string}
          */
         Dimension: "clarity" | "conciseness" | "structure" | "audience_fit" | "tone" | "confidence" | "grammar_vocabulary" | "fluency" | "pronunciation";
+        /** EndSessionOut */
+        EndSessionOut: {
+            /** Report Status */
+            report_status?: string | null;
+            status: components["schemas"]["SessionStatus"];
+        };
         /**
          * EnglishLevel
          * @enum {string}
@@ -163,6 +231,42 @@ export interface components {
             profile: components["schemas"]["ProfileOut"];
             settings: components["schemas"]["SettingsOut"];
             user: components["schemas"]["UserOut"];
+        };
+        /** MessageOut */
+        MessageOut: {
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            role: components["schemas"]["MessageRole"];
+            /** Seq */
+            seq: number;
+            source: components["schemas"]["MessageSource"];
+        };
+        /**
+         * MessageRole
+         * @enum {string}
+         */
+        MessageRole: "assistant" | "user";
+        /**
+         * MessageSource
+         * @enum {string}
+         */
+        MessageSource: "text" | "voice" | "system";
+        /** Page[SessionSummary] */
+        Page_SessionSummary_: {
+            /** Items */
+            items: components["schemas"]["SessionSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /**
          * Persona
@@ -250,6 +354,13 @@ export interface components {
             /** User Objective */
             user_objective: string;
         };
+        /** ScenarioRef */
+        ScenarioRef: {
+            /** Slug */
+            slug: string;
+            /** Title */
+            title: string;
+        };
         /** ScenarioSummary */
         ScenarioSummary: {
             category: components["schemas"]["ScenarioCategory"];
@@ -275,6 +386,65 @@ export interface components {
          * @enum {string}
          */
         Seniority: "junior" | "mid" | "senior" | "staff_plus" | "manager";
+        /** SessionDetail */
+        SessionDetail: {
+            /** Ended At */
+            ended_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            limits: components["schemas"]["SessionLimits"];
+            /** Messages */
+            messages: components["schemas"]["MessageOut"][];
+            mode: components["schemas"]["PracticeMode"];
+            /** Overall Score */
+            overall_score?: number | null;
+            scenario: components["schemas"]["ScenarioRef"];
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            status: components["schemas"]["SessionStatus"];
+            /** User Turns */
+            user_turns: number;
+        };
+        /** SessionLimits */
+        SessionLimits: {
+            /** Max Message Chars */
+            max_message_chars: number;
+            /** Max User Turns */
+            max_user_turns: number;
+        };
+        /**
+         * SessionStatus
+         * @enum {string}
+         */
+        SessionStatus: "active" | "ended" | "abandoned";
+        /** SessionSummary */
+        SessionSummary: {
+            /** Ended At */
+            ended_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            mode: components["schemas"]["PracticeMode"];
+            /** Overall Score */
+            overall_score?: number | null;
+            scenario: components["schemas"]["ScenarioRef"];
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            status: components["schemas"]["SessionStatus"];
+            /** User Turns */
+            user_turns: number;
+        };
         /** SettingsOut */
         SettingsOut: {
             default_mode: components["schemas"]["PracticeMode"];
@@ -455,6 +625,163 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScenarioDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sessions: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                status?: components["schemas"]["SessionStatus"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SessionSummary_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndSessionOut"];
                 };
             };
             /** @description Validation Error */
