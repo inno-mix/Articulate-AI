@@ -128,6 +128,40 @@
         "title": "MeOut",
         "type": "object"
       },
+      "Persona": {
+        "additionalProperties": false,
+        "description": "The AI character in a practice scenario (`scenarios.persona`).",
+        "properties": {
+          "goals": {
+            "maxLength": 200,
+            "title": "Goals",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 40,
+            "title": "Name",
+            "type": "string"
+          },
+          "personality": {
+            "maxLength": 200,
+            "title": "Personality",
+            "type": "string"
+          },
+          "role": {
+            "maxLength": 80,
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "role",
+          "personality",
+          "goals"
+        ],
+        "title": "Persona",
+        "type": "object"
+      },
       "PracticeMode": {
         "enum": [
           "text",
@@ -282,6 +316,144 @@
           }
         },
         "title": "ProfileUpdate",
+        "type": "object"
+      },
+      "RecommendedMode": {
+        "enum": [
+          "text",
+          "voice",
+          "either"
+        ],
+        "title": "RecommendedMode",
+        "type": "string"
+      },
+      "ScenarioCategory": {
+        "enum": [
+          "status_updates",
+          "stakeholder_communication",
+          "interviews",
+          "code_review",
+          "negotiation",
+          "meetings",
+          "career"
+        ],
+        "title": "ScenarioCategory",
+        "type": "string"
+      },
+      "ScenarioDetail": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/ScenarioCategory"
+          },
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_custom": {
+            "title": "Is Custom",
+            "type": "boolean"
+          },
+          "opening_line": {
+            "title": "Opening Line",
+            "type": "string"
+          },
+          "persona": {
+            "$ref": "#/components/schemas/Persona"
+          },
+          "recommended_mode": {
+            "$ref": "#/components/schemas/RecommendedMode"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "success_criteria": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Success Criteria",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "user_objective": {
+            "title": "User Objective",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "category",
+          "difficulty",
+          "summary",
+          "recommended_mode",
+          "is_custom",
+          "persona",
+          "user_objective",
+          "opening_line",
+          "success_criteria"
+        ],
+        "title": "ScenarioDetail",
+        "type": "object"
+      },
+      "ScenarioSummary": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/ScenarioCategory"
+          },
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_custom": {
+            "title": "Is Custom",
+            "type": "boolean"
+          },
+          "recommended_mode": {
+            "$ref": "#/components/schemas/RecommendedMode"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "category",
+          "difficulty",
+          "summary",
+          "recommended_mode",
+          "is_custom"
+        ],
+        "title": "ScenarioSummary",
         "type": "object"
       },
       "Seniority": {
@@ -521,6 +693,150 @@
         "summary": "Update My Profile",
         "tags": [
           "me"
+        ]
+      }
+    },
+    "/api/v1/scenarios": {
+      "get": {
+        "operationId": "list_scenarios",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ScenarioCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "difficulty",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 3,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Difficulty"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RecommendedMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mode"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "builtin",
+                "mine",
+                "all"
+              ],
+              "title": "Owner",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioSummary"
+                  },
+                  "title": "Response List Scenarios",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Scenarios",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    },
+    "/api/v1/scenarios/{slug}": {
+      "get": {
+        "operationId": "get_scenario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Scenario",
+        "tags": [
+          "scenarios"
         ]
       }
     },

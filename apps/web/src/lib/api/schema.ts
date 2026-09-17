@@ -55,6 +55,40 @@ export interface paths {
         patch: operations["update_my_profile"];
         trace?: never;
     };
+    "/api/v1/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Scenarios */
+        get: operations["list_scenarios"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scenarios/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scenario */
+        get: operations["get_scenario"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -131,6 +165,20 @@ export interface components {
             user: components["schemas"]["UserOut"];
         };
         /**
+         * Persona
+         * @description The AI character in a practice scenario (`scenarios.persona`).
+         */
+        Persona: {
+            /** Goals */
+            goals: string;
+            /** Name */
+            name: string;
+            /** Personality */
+            personality: string;
+            /** Role */
+            role: string;
+        };
+        /**
          * PracticeMode
          * @enum {string}
          */
@@ -164,6 +212,63 @@ export interface components {
             seniority?: components["schemas"]["Seniority"] | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /**
+         * RecommendedMode
+         * @enum {string}
+         */
+        RecommendedMode: "text" | "voice" | "either";
+        /**
+         * ScenarioCategory
+         * @enum {string}
+         */
+        ScenarioCategory: "status_updates" | "stakeholder_communication" | "interviews" | "code_review" | "negotiation" | "meetings" | "career";
+        /** ScenarioDetail */
+        ScenarioDetail: {
+            category: components["schemas"]["ScenarioCategory"];
+            /** Difficulty */
+            difficulty: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Custom */
+            is_custom: boolean;
+            /** Opening Line */
+            opening_line: string;
+            persona: components["schemas"]["Persona"];
+            recommended_mode: components["schemas"]["RecommendedMode"];
+            /** Slug */
+            slug: string;
+            /** Success Criteria */
+            success_criteria: string[];
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
+            /** User Objective */
+            user_objective: string;
+        };
+        /** ScenarioSummary */
+        ScenarioSummary: {
+            category: components["schemas"]["ScenarioCategory"];
+            /** Difficulty */
+            difficulty: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Custom */
+            is_custom: boolean;
+            recommended_mode: components["schemas"]["RecommendedMode"];
+            /** Slug */
+            slug: string;
+            /** Summary */
+            summary: string;
+            /** Title */
+            title: string;
         };
         /**
          * Seniority
@@ -285,6 +390,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_scenarios: {
+        parameters: {
+            query?: {
+                category?: components["schemas"]["ScenarioCategory"] | null;
+                difficulty?: number | null;
+                mode?: components["schemas"]["RecommendedMode"] | null;
+                owner?: "builtin" | "mine" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scenario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioDetail"];
                 };
             };
             /** @description Validation Error */

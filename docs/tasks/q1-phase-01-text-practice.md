@@ -173,17 +173,17 @@ Visibility rule: built-in (non-assessment) scenarios + custom scenarios owned by
 Ordering: difficulty asc, title asc.
 
 **Subtasks:**
-- [ ] 1.2.1 Failing tests: `test_list_excludes_assessment_scenarios`,
+- [x] 1.2.1 Failing tests: `test_list_excludes_assessment_scenarios`,
   `test_list_filters_by_category`, `test_list_filters_by_difficulty`,
   `test_list_mode_filter_includes_either`, `test_list_hides_other_users_custom_scenarios`
   (factory creates a custom scenario for `other_user`), `test_get_by_slug_returns_detail`,
   `test_get_unknown_slug_returns_404_envelope`, `test_get_other_users_custom_scenario_returns_404`,
   `test_invalid_difficulty_query_returns_422`.
-- [ ] 1.2.2 Run → FAIL. Implement. Run → PASS. `make gen-client`.
-- [ ] 1.2.3 Commit: `feat(api): add scenario list and detail endpoints`
+- [x] 1.2.2 Run → FAIL. Implement. Run → PASS. `make gen-client`.
+- [x] 1.2.3 Commit: `feat(api): add scenario list and detail endpoints`
 
 **Acceptance criteria:**
-- [ ] Filters combine (AND); assessment scenarios never listed; ownership enforced.
+- [x] Filters combine (AND); assessment scenarios never listed; ownership enforced.
 
 ---
 
@@ -576,6 +576,11 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-17 · Task 1.2 · (this commit) · `uv run pytest` 72 passed; `make check` green ·
+  Notes: GET /scenarios/{slug} does not additionally hide assessment scenarios (only the list
+  endpoint excludes them) — api-contract.md's "Assessment scenarios are excluded" bullet sits
+  under the list endpoint only, and Task 1.4 hides them at session creation instead · Follow-ups:
+  none
 
 - 2026-09-17 · Task 1.1 · (this commit) · `uv run pytest` 62 passed; `make seed` on dev DB →
   "scenarios: created=17 updated=0 unchanged=0", re-run → "created=0 updated=0 unchanged=17";
