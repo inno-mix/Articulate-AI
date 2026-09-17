@@ -233,13 +233,13 @@ user_objective), `learner` (seniority, english_level), `mode` (`text`|`voice`),
 `recent_transcript` (list of `{speaker, text}`).
 
 **Subtasks:**
-- [ ] 1.3.1 Failing tests `test_fake.py`: `test_stream_chat_yields_documented_deltas`,
+- [x] 1.3.1 Failing tests `test_fake.py`: `test_stream_chat_yields_documented_deltas`,
   `test_complete_text_returns_fixed_hint`, `test_generate_structured_returns_fake_output`,
   `test_generate_structured_override_and_fail_times` (first call raises
   `LLMInvalidOutputError`, second returns override), `test_last_usage_is_recorded`,
   `test_calls_record_temperature` (the fake keeps a `calls` list with method name and
   temperature).
-- [ ] 1.3.2 Failing tests `test_prompts.py`: `test_render_roleplay_includes_persona_and_rules`,
+- [x] 1.3.2 Failing tests `test_prompts.py`: `test_render_roleplay_includes_persona_and_rules`,
   `test_every_template_includes_the_english_language_rule` (walks `app/llm/prompts/*.md.j2`,
   checks every system template — skips `_user.md.j2` files and partials starting with `_`),
   `test_user_block_wraps_text_in_delimiters`, `test_prompts_never_receive_native_language` (rendering with a
@@ -247,7 +247,7 @@ user_objective), `learner` (seniority, english_level), `mode` (`text`|`voice`),
   `test_render_voice_mode_includes_no_markdown_rule`, `test_missing_variable_raises`,
   `test_version_is_parsed_from_header`, `test_user_text_is_wrapped_in_delimiters` (hint
   template wraps transcript lines in `<user_text>` tags).
-- [ ] 1.3.3 Failing tests `test_pydantic_ai_service.py` using `FunctionModel`/`TestModel`
+- [x] 1.3.3 Failing tests `test_pydantic_ai_service.py` using `FunctionModel`/`TestModel`
   injected through a constructor seam (`PydanticAILLMService(model=..., provider="ollama",
   model_name="test", output_mode="native"|"tool")`) and `models.ALLOW_MODEL_REQUESTS = False`:
   - `test_stream_chat_yields_deltas_in_order`
@@ -261,15 +261,15 @@ user_objective), `learner` (seniority, english_level), `mode` (`text`|`voice`),
   - `test_temperature_is_passed_as_model_setting` and
     `test_generate_structured_defaults_to_temperature_zero` (`ai-layer.md` §4.3)
   - `test_generation_table_has_every_feature` (`app/llm/generation.py`)
-- [ ] 1.3.4 Run → FAIL. Implement. Run → PASS.
-- [ ] 1.3.5 Live test `tests/live/test_ollama_live.py` (`@pytest.mark.live`): stream a 1-sentence
+- [x] 1.3.4 Run → FAIL. Implement. Run → PASS.
+- [x] 1.3.5 Live test `tests/live/test_ollama_live.py` (`@pytest.mark.live`): stream a 1-sentence
   reply; generate a tiny structured model (`class Echo(BaseModel): word: str`). Run
   `make test-live` with Ollama running → PASS. Record model + latency in the completion log.
-- [ ] 1.3.6 Commit: `feat(api): add llm service layer with ollama and fake providers`
+- [x] 1.3.6 Commit: `feat(api): add llm service layer with ollama and fake providers`
 
 **Acceptance criteria:**
-- [ ] App code can only reach the LLM through `LLMService`.
-- [ ] Fake is deterministic; Ollama works end-to-end locally.
+- [x] App code can only reach the LLM through `LLMService`.
+- [x] Fake is deterministic; Ollama works end-to-end locally.
 
 **Pitfalls:** Ollama's OpenAI-compatible base URL needs `/v1`; the default context window is small
 (set `OLLAMA_CONTEXT_LENGTH`); `qwen3` "thinking" output must be disabled if that model is used.
@@ -576,6 +576,24 @@ start them from event handlers. Keep `AbortController` per send.
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-17 · Task 1.3 · (this commit) · `uv run pytest` 97 passed, 2 deselected (live);
+  `make check` green; `make test-live` (real Ollama, `llama3.2:latest`) 2 passed — first token
+  0.49–0.51 s, full 1-3 sentence reply 2.4–2.8 s (41–55 output tokens), structured `Echo` output
+  0.85–1.1 s · Notes: verified via Context7 `/pydantic/pydantic-ai` (installed pydantic-ai-slim
+  2.44.0) — `Agent.run_stream` is an async context manager, `stream_text(delta=True,
+  debounce_by=None)` for immediate per-chunk deltas (default `debounce_by=0.1` coalesces fast
+  chunks), `.usage` is a property (not a method) and only complete after the stream drains;
+  `openai`-compatible providers map `APIStatusError(status>=400)` → `ModelHTTPError` (has
+  `.status_code`) and `APIConnectionError`/timeouts → the plainer `ModelAPIError`;
+  `UnexpectedModelBehavior` on exhausted output-validation retries. Enforced
+  `settings.llm_timeout_seconds` inside the service via `asyncio.wait_for` per call/per-delta
+  (ai-layer.md didn't specify a mechanism); suppressed pydantic-ai's stdout startup banner
+  (`PYDANTIC_AI_NO_BANNER=1`) so it can't land in structured logs. `hint.md.j2` doesn't render
+  `recent_transcript` itself — the transcript goes in the *user* prompt via `user_block()`
+  (Task 1.5), consistent with wrapping user-provided text in `<user_text>` tags · Follow-ups: the
+  "omit temperature and log once if the provider rejects it" fallback (ai-layer.md §4.3) isn't
+  implemented — Q1 only calls Ollama, which accepts it; revisit in Phase 9 (BYOK, arbitrary
+  provider/model)
 - 2026-09-17 · Task 1.2 · (this commit) · `uv run pytest` 72 passed; `make check` green ·
   Notes: GET /scenarios/{slug} does not additionally hide assessment scenarios (only the list
   endpoint excludes them) — api-contract.md's "Assessment scenarios are excluded" bullet sits

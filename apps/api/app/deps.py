@@ -11,6 +11,8 @@ from app.core.config import Settings
 from app.core.db import get_db
 from app.core.errors import LocalUserMissingError, UnauthorizedError
 from app.domain.constants import LOCAL_USER_ID
+from app.llm.base import LLMService
+from app.llm.factory import get_llm_service
 from app.models import User
 
 
@@ -38,3 +40,10 @@ async def get_current_user(db: DbDep, settings: SettingsDep) -> User:
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_llm(user: CurrentUser, db: DbDep, settings: SettingsDep) -> LLMService:
+    return await get_llm_service(user, db, settings)
+
+
+LLMDep = Annotated[LLMService, Depends(get_llm)]
