@@ -18,7 +18,9 @@ RESULT_TTL_SECONDS = 3600
 
 def build_broker(settings: Settings) -> AsyncBroker:
     if settings.app_env == "test":
-        return InMemoryBroker()
+        # await_inplace: a service's `await enqueue_report(...)` (or any `.kiq()`) runs the task
+        # to completion inline, so tests see its effects without a separate `wait_result` call.
+        return InMemoryBroker(await_inplace=True)
     # redis-py 8 defaults to a 5 s socket timeout; taskiq-redis waits for jobs with a
     # blocking BRPOP, so the broker's connections must not time out while idle.
     return ListQueueBroker(settings.redis_url, socket_timeout=None).with_result_backend(

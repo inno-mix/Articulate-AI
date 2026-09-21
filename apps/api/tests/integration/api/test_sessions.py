@@ -165,7 +165,9 @@ async def test_end_session_with_two_user_turns_is_ended(
     response = await client.post(f"/api/v1/sessions/{session.id}/end")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ended", "report_status": None}
+    # `report_status` is "pending" at the instant `end_session` returns — it's captured before
+    # the (fake, synchronous-in-tests) worker run, per api-contract.md §2 Sessions (end).
+    assert response.json() == {"status": "ended", "report_status": "pending"}
 
 
 async def test_end_session_is_idempotent(
@@ -180,7 +182,30 @@ async def test_end_session_is_idempotent(
 
     assert first.status_code == 200
     assert second.status_code == 200
-    assert first.json() == second.json() == {"status": "ended", "report_status": None}
+    assert first.json()["status"] == second.json()["status"] == "ended"
+    # First call: report just created ("pending"). Second call: it already ran (test broker is
+    # synchronous), so ending the same session again reports its current status ("ready").
+    assert first.json()["report_status"] == "pending"
+    assert second.json()["report_status"] == "ready"
+
+
+async def test_session_list_includes_overall_score_when_ready(
+    client: httpx.AsyncClient, db: AsyncSession, local_user: User
+) -> None:
+    scenario = await make_scenario(db, slug="list-overall-score")
+    session = await make_session(db, user_id=local_user.id, scenario_id=scenario.id, user_turns=2)
+    await make_message(db, session, role=MessageRole.USER, content="Hi Sam, thanks for the PR.")
+    await db.commit()
+
+    # `end_session` returns "pending" (captured before enqueueing); the test broker then runs the
+    # job to completion synchronously, so the report is already "ready" by the time this returns.
+    await client.post(f"/api/v1/sessions/{session.id}/end")
+
+    list_response = await client.get("/api/v1/sessions")
+
+    body = list_response.json()
+    item = next(i for i in body["items"] if i["id"] == str(session.id))
+    assert isinstance(item["overall_score"], int)
 
 
 async def test_delete_session_removes_it_and_its_messages(

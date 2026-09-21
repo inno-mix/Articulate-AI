@@ -242,7 +242,7 @@ async def retry_report(db, user_id, session_id) -> RetryOut
 Add `ReportNotReadyError` (409 `report_not_ready`).
 
 **Subtasks:**
-- [ ] 2.4.1 Failing tests:
+- [x] 2.4.1 Failing tests:
   - `test_end_session_creates_pending_report_and_enqueues` (InMemoryBroker executes → report
     `ready` afterwards when awaited).
   - `test_end_abandoned_session_has_no_report` → `GET report` 404.
@@ -254,10 +254,10 @@ Add `ReportNotReadyError` (409 `report_not_ready`).
   - `test_retry_stale_running_report_requeues` (`updated_at` 6 minutes ago → 202)
   - `test_retry_ready_report_regenerates`
   - `test_session_list_includes_overall_score_when_ready`
-- [ ] 2.4.2 Run → FAIL. Implement. Run → PASS. `make gen-client`.
-- [ ] 2.4.3 Manual check with Ollama + worker (`make dev`): hold a 3-turn conversation, end it,
+- [x] 2.4.2 Run → FAIL. Implement. Run → PASS. `make gen-client`.
+- [x] 2.4.3 Manual check with Ollama + worker (`make dev`): hold a 3-turn conversation, end it,
   `curl …/report` until `ready`; note generation time in the completion log.
-- [ ] 2.4.4 Commit: `feat(api): queue reports on session end and expose report endpoints`
+- [x] 2.4.4 Commit: `feat(api): queue reports on session end and expose report endpoints`
 
 ---
 
@@ -497,3 +497,28 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
   from the scenario (a real, known value) and leaves `prompt_version=""` as a placeholder — neither
   field is exposed in `ReportOut` per api-contract.md §2 Reports, so a report is never shown in an
   inconsistent state while pending · Follow-ups: none
+- 2026-09-21 · Task 2.4 · (this commit) · `make check` → API 193 passed + 2 deselected, Web 29
+  passed, lint/typecheck/format clean, generated client regenerated with no further drift · Manual
+  check with real Ollama (`llama3.2:latest`) + worker via `make dev`: held a 3-turn code-review
+  conversation, ended it (`report_status: "pending"` returned immediately, matching the documented
+  contract — the value is captured before enqueueing, not re-read after), then polled
+  `GET .../report` every 2 s — reached `status: "ready"` after ~43 s (`created_at` → `completed_at`
+  delta), well inside the "up to a minute" copy planned for Task 2.6. `overall_score: 89`,
+  `objective_met: false`, all 7 dimension scores present and sensible (grounded in the actual
+  conversation content). Deleted the verification session and stopped the manually-started
+  servers afterward. Notes: `InMemoryBroker(await_inplace=True)` (only for `app_env=="test"`) makes
+  `.kiq()` run the task inline, so integration tests observe worker effects without a separate
+  `wait_result()` call — this changed `end_session`'s existing tests' expected `report_status`
+  (was always `null` before Phase 2; two-turn sessions now get a real report), so
+  `test_end_session_with_two_user_turns_is_ended` and `test_end_session_is_idempotent` were updated
+  to match, not just left broken. `retry_report` needs `enqueue_report` from
+  `app/worker/tasks/feedback.py`, which itself imports `generate_report` from this same
+  `app/services/feedback.py` module — a module-level import the other way would be circular, so
+  `retry_report` imports it locally inside the function body. `list_sessions`/`get_session_detail`
+  now LEFT JOIN `feedback_reports` (filtered to `status=ready`) to populate `overall_score`; the
+  unique constraint on `feedback_reports.session_id` guarantees the join never duplicates rows ·
+  Follow-ups: the real-Ollama manual check returned `summary: ""` (an empty string — valid per the
+  `FeedbackAnalysis.summary` schema, which has no `min_length`) and empty `highlights`/
+  `grammar_fixes` lists; not a Phase 2 mechanical bug (the code faithfully stored and filtered
+  exactly what the model returned), but exactly the kind of prompt-quality gap Task 2.5's eval
+  suite is meant to catch — worth a `min_length` on `summary` or an eval case for it.

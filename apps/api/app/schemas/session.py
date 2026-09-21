@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from app.domain.enums import MessageRole, MessageSource, PracticeMode, SessionStatus
+from app.domain.enums import MessageRole, MessageSource, PracticeMode, ReportStatus, SessionStatus
 from app.schemas.common import RequestModel, ResponseModel
 
 
@@ -43,7 +43,7 @@ class SessionSummary(ResponseModel):
     started_at: datetime
     ended_at: datetime | None
     user_turns: int
-    overall_score: int | None = None  # always null in Phase 1 (Phase 2 adds reports)
+    overall_score: int | None = None  # set once the session's report is ready
 
 
 class SessionLimits(ResponseModel):
@@ -58,4 +58,4 @@ class SessionDetail(SessionSummary):
 
 class EndSessionOut(ResponseModel):
     status: SessionStatus
-    report_status: str | None = None  # always null in Phase 1 (Phase 2 adds reports)
+    report_status: ReportStatus | None = None  # null only when the session was abandoned

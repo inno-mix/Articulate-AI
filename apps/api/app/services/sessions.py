@@ -13,10 +13,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.errors import NotFoundError
-from app.domain.enums import MessageRole, MessageSource, PracticeMode, SessionPurpose, SessionStatus
+from app.domain.enums import (
+    MessageRole,
+    MessageSource,
+    PracticeMode,
+    ReportStatus,
+    SessionPurpose,
+    SessionStatus,
+)
 from app.domain.limits import MAX_MESSAGE_CHARS, MAX_USER_TURNS, MIN_USER_TURNS_FOR_REPORT
 from app.llm.base import LLMService
-from app.models import Message, PracticeSession, User
+from app.models import FeedbackReport, Message, PracticeSession, User
 from app.schemas.common import Page
 from app.schemas.session import (
     EndSessionOut,
@@ -27,10 +34,12 @@ from app.schemas.session import (
     SessionSummary,
 )
 from app.services import scenarios as scenarios_service
+from app.services.feedback import create_pending_report
 from app.services.pagination import MAX_LIMIT, decode_cursor, encode_cursor
+from app.worker.tasks.feedback import enqueue_report
 
 
-def _to_summary(session: PracticeSession) -> SessionSummary:
+def _to_summary(session: PracticeSession, overall_score: int | None = None) -> SessionSummary:
     return SessionSummary(
         id=session.id,
         scenario=ScenarioRef(slug=session.scenario.slug, title=session.scenario.title),
@@ -39,6 +48,7 @@ def _to_summary(session: PracticeSession) -> SessionSummary:
         started_at=session.started_at,
         ended_at=session.ended_at,
         user_turns=session.user_turns,
+        overall_score=overall_score,
     )
 
 
@@ -143,33 +153,54 @@ async def list_sessions(
         )
 
     rows = list(
-        await db.scalars(
-            select(PracticeSession)
-            .where(*conditions)
-            .options(selectinload(PracticeSession.scenario))
-            .order_by(PracticeSession.started_at.desc(), PracticeSession.id.desc())
-            .limit(limit + 1)
-        )
+        (
+            await db.execute(
+                select(PracticeSession, FeedbackReport.overall_score)
+                .where(*conditions)
+                .outerjoin(
+                    FeedbackReport,
+                    (FeedbackReport.session_id == PracticeSession.id)
+                    & (FeedbackReport.status == ReportStatus.READY),
+                )
+                .options(selectinload(PracticeSession.scenario))
+                .order_by(PracticeSession.started_at.desc(), PracticeSession.id.desc())
+                .limit(limit + 1)
+            )
+        ).all()
     )
     has_more = len(rows) > limit
     rows = rows[:limit]
-    next_cursor = encode_cursor(rows[-1].started_at, rows[-1].id) if has_more and rows else None
-    return Page(items=[_to_summary(s) for s in rows], next_cursor=next_cursor)
+    last_session = rows[-1][0] if rows else None
+    next_cursor = (
+        encode_cursor(last_session.started_at, last_session.id)
+        if has_more and last_session
+        else None
+    )
+    items = [_to_summary(session, overall_score) for session, overall_score in rows]
+    return Page(items=items, next_cursor=next_cursor)
 
 
 async def get_session_detail(db: AsyncSession, user_id: UUID, session_id: UUID) -> SessionDetail:
-    session = await db.scalar(
-        select(PracticeSession)
-        .where(PracticeSession.id == session_id, PracticeSession.user_id == user_id)
-        .options(selectinload(PracticeSession.scenario))
-    )
-    if session is None:
+    row = (
+        await db.execute(
+            select(PracticeSession, FeedbackReport.overall_score)
+            .where(PracticeSession.id == session_id, PracticeSession.user_id == user_id)
+            .outerjoin(
+                FeedbackReport,
+                (FeedbackReport.session_id == PracticeSession.id)
+                & (FeedbackReport.status == ReportStatus.READY),
+            )
+            .options(selectinload(PracticeSession.scenario))
+        )
+    ).first()
+    if row is None:
         raise NotFoundError()
+    session, overall_score = row
     messages = await db.scalars(
         select(Message).where(Message.session_id == session_id).order_by(Message.seq)
     )
     return SessionDetail(
-        **_to_summary(session).model_dump(),
+        **_to_summary(session, overall_score).model_dump(),
         messages=[MessageOut.model_validate(m) for m in messages],
         limits=SessionLimits(max_user_turns=MAX_USER_TURNS, max_message_chars=MAX_MESSAGE_CHARS),
     )
@@ -185,7 +216,22 @@ async def end_session(db: AsyncSession, user_id: UUID, session_id: UUID) -> EndS
         )
         session.ended_at = datetime.now(UTC)
         await db.flush()
-    return EndSessionOut(status=session.status, report_status=None)
+        if session.status == SessionStatus.ENDED:
+            report = await create_pending_report(db, session)
+            # Commit before enqueueing: the worker may pick the job up before this transaction
+            # commits otherwise (app/services/feedback.py's generate_report Pitfall).
+            await db.commit()
+            pending_status = report.status
+            await enqueue_report(report.id)
+            return EndSessionOut(status=session.status, report_status=pending_status)
+        return EndSessionOut(status=session.status, report_status=None)
+
+    report_status: ReportStatus | None = None
+    if session.status == SessionStatus.ENDED:
+        report_status = await db.scalar(
+            select(FeedbackReport.status).where(FeedbackReport.session_id == session.id)
+        )
+    return EndSessionOut(status=session.status, report_status=report_status)
 
 
 async def delete_session(db: AsyncSession, user_id: UUID, session_id: UUID) -> None:

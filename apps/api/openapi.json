@@ -35,18 +35,42 @@
         "title": "Dimension",
         "type": "string"
       },
+      "DimensionScoreOut": {
+        "additionalProperties": false,
+        "description": "One rubric dimension's score (`feedback_reports.dimension_scores`).",
+        "properties": {
+          "dimension": {
+            "title": "Dimension",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dimension",
+          "score",
+          "reason"
+        ],
+        "title": "DimensionScoreOut",
+        "type": "object"
+      },
       "EndSessionOut": {
         "properties": {
           "report_status": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/ReportStatus"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Report Status"
+            ]
           },
           "status": {
             "$ref": "#/components/schemas/SessionStatus"
@@ -80,6 +104,31 @@
         ],
         "title": "Goal",
         "type": "string"
+      },
+      "GrammarFix": {
+        "additionalProperties": false,
+        "description": "A quote-anchored grammar correction (`feedback_reports.grammar_fixes`).",
+        "properties": {
+          "corrected": {
+            "title": "Corrected",
+            "type": "string"
+          },
+          "explanation": {
+            "title": "Explanation",
+            "type": "string"
+          },
+          "original": {
+            "title": "Original",
+            "type": "string"
+          }
+        },
+        "required": [
+          "original",
+          "corrected",
+          "explanation"
+        ],
+        "title": "GrammarFix",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -148,6 +197,44 @@
           "checks"
         ],
         "title": "HealthOut",
+        "type": "object"
+      },
+      "Highlight": {
+        "additionalProperties": false,
+        "description": "A quote-anchored moment to improve (`feedback_reports.highlights`).",
+        "properties": {
+          "better_version": {
+            "title": "Better Version",
+            "type": "string"
+          },
+          "issue": {
+            "title": "Issue",
+            "type": "string"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message_id",
+          "quote",
+          "issue",
+          "better_version"
+        ],
+        "title": "Highlight",
         "type": "object"
       },
       "HintOut": {
@@ -464,6 +551,216 @@
         ],
         "title": "RecommendedMode",
         "type": "string"
+      },
+      "ReportOut": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dimension_scores": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DimensionScoreOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Scores"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "grammar_fixes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/GrammarFix"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grammar Fixes"
+          },
+          "highlights": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Highlight"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highlights"
+          },
+          "improvements": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Improvements"
+          },
+          "llm_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Model"
+          },
+          "objective_met": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective Met"
+          },
+          "overall_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Score"
+          },
+          "rubric_version": {
+            "title": "Rubric Version",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "strengths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strengths"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "voice_metrics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "error_code",
+          "overall_score",
+          "objective_met",
+          "summary",
+          "dimension_scores",
+          "strengths",
+          "improvements",
+          "highlights",
+          "grammar_fixes",
+          "voice_metrics",
+          "rubric_version",
+          "llm_model",
+          "created_at",
+          "updated_at",
+          "completed_at"
+        ],
+        "title": "ReportOut",
+        "type": "object"
+      },
+      "ReportStatus": {
+        "enum": [
+          "pending",
+          "running",
+          "ready",
+          "failed"
+        ],
+        "title": "ReportStatus",
+        "type": "string"
+      },
+      "RetryOut": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "RetryOut",
+        "type": "object"
       },
       "ScenarioCategory": {
         "enum": [
@@ -937,6 +1234,77 @@
         ],
         "title": "VoiceInputMode",
         "type": "string"
+      },
+      "VoiceMetrics": {
+        "additionalProperties": false,
+        "description": "Speaking stats computed from a voice session (`feedback_reports.voice_metrics`).",
+        "properties": {
+          "filler_count": {
+            "title": "Filler Count",
+            "type": "integer"
+          },
+          "filler_examples": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Filler Examples",
+            "type": "array"
+          },
+          "filler_rate_per_100": {
+            "title": "Filler Rate Per 100",
+            "type": "number"
+          },
+          "fluency_score": {
+            "title": "Fluency Score",
+            "type": "integer"
+          },
+          "hard_to_catch_words": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hard To Catch Words",
+            "type": "array"
+          },
+          "long_pause_count": {
+            "title": "Long Pause Count",
+            "type": "integer"
+          },
+          "long_pauses_per_min": {
+            "title": "Long Pauses Per Min",
+            "type": "number"
+          },
+          "pace_measured": {
+            "title": "Pace Measured",
+            "type": "boolean"
+          },
+          "speaking_seconds": {
+            "title": "Speaking Seconds",
+            "type": "number"
+          },
+          "words": {
+            "title": "Words",
+            "type": "integer"
+          },
+          "wpm": {
+            "title": "Wpm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "speaking_seconds",
+          "words",
+          "wpm",
+          "pace_measured",
+          "filler_count",
+          "filler_rate_per_100",
+          "filler_examples",
+          "long_pause_count",
+          "long_pauses_per_min",
+          "hard_to_catch_words",
+          "fluency_score"
+        ],
+        "title": "VoiceMetrics",
+        "type": "object"
       }
     }
   },
@@ -1500,6 +1868,92 @@
         "summary": "Stream Session Message",
         "tags": [
           "sessions"
+        ]
+      }
+    },
+    "/api/v1/sessions/{session_id}/report": {
+      "get": {
+        "operationId": "get_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Report",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/sessions/{session_id}/report/retry": {
+      "post": {
+        "operationId": "retry_report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Report",
+        "tags": [
+          "reports"
         ]
       }
     },

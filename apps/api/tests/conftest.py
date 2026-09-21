@@ -98,10 +98,16 @@ async def app(
     redis_client: Redis,
 ) -> FastAPI:
     from app.main import create_app
+    from app.worker.broker import broker
 
     application = create_app(settings)
     application.state.session_factory = session_factory
     application.state.redis = redis_client
+
+    # Worker startup normally populates this (ADR-0006); tests never run a real worker process,
+    # so an endpoint that enqueues a job (e.g. ending a session) needs it set directly.
+    broker.state.settings = settings
+    broker.state.session_factory = session_factory
 
     async def override_get_db() -> AsyncIterator[AsyncSession]:
         try:

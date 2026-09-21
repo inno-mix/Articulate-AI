@@ -176,6 +176,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sessions/{session_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Report */
+        get: operations["get_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/report/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Report */
+        post: operations["retry_report"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -212,10 +246,21 @@ export interface components {
          * @enum {string}
          */
         Dimension: "clarity" | "conciseness" | "structure" | "audience_fit" | "tone" | "confidence" | "grammar_vocabulary" | "fluency" | "pronunciation";
+        /**
+         * DimensionScoreOut
+         * @description One rubric dimension's score (`feedback_reports.dimension_scores`).
+         */
+        DimensionScoreOut: {
+            /** Dimension */
+            dimension: string;
+            /** Reason */
+            reason: string;
+            /** Score */
+            score: number;
+        };
         /** EndSessionOut */
         EndSessionOut: {
-            /** Report Status */
-            report_status?: string | null;
+            report_status?: components["schemas"]["ReportStatus"] | null;
             status: components["schemas"]["SessionStatus"];
         };
         /**
@@ -228,6 +273,18 @@ export interface components {
          * @enum {string}
          */
         Goal: "interviews" | "meetings" | "stakeholders" | "code_review" | "presentations" | "writing";
+        /**
+         * GrammarFix
+         * @description A quote-anchored grammar correction (`feedback_reports.grammar_fixes`).
+         */
+        GrammarFix: {
+            /** Corrected */
+            corrected: string;
+            /** Explanation */
+            explanation: string;
+            /** Original */
+            original: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -259,6 +316,20 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "degraded";
+        };
+        /**
+         * Highlight
+         * @description A quote-anchored moment to improve (`feedback_reports.highlights`).
+         */
+        Highlight: {
+            /** Better Version */
+            better_version: string;
+            /** Issue */
+            issue: string;
+            /** Message Id */
+            message_id: string | null;
+            /** Quote */
+            quote: string;
         };
         /** HintOut */
         HintOut: {
@@ -361,6 +432,54 @@ export interface components {
          * @enum {string}
          */
         RecommendedMode: "text" | "voice" | "either";
+        /** ReportOut */
+        ReportOut: {
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Dimension Scores */
+            dimension_scores: components["schemas"]["DimensionScoreOut"][] | null;
+            /** Error Code */
+            error_code: string | null;
+            /** Grammar Fixes */
+            grammar_fixes: components["schemas"]["GrammarFix"][] | null;
+            /** Highlights */
+            highlights: components["schemas"]["Highlight"][] | null;
+            /** Improvements */
+            improvements: string[] | null;
+            /** Llm Model */
+            llm_model: string | null;
+            /** Objective Met */
+            objective_met: boolean | null;
+            /** Overall Score */
+            overall_score: number | null;
+            /** Rubric Version */
+            rubric_version: string;
+            status: components["schemas"]["ReportStatus"];
+            /** Strengths */
+            strengths: string[] | null;
+            /** Summary */
+            summary: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            voice_metrics: components["schemas"]["VoiceMetrics"] | null;
+        };
+        /**
+         * ReportStatus
+         * @enum {string}
+         */
+        ReportStatus: "pending" | "running" | "ready" | "failed";
+        /** RetryOut */
+        RetryOut: {
+            status: components["schemas"]["ReportStatus"];
+        };
         /**
          * ScenarioCategory
          * @enum {string}
@@ -535,6 +654,34 @@ export interface components {
          * @enum {string}
          */
         VoiceInputMode: "push_to_talk" | "hands_free";
+        /**
+         * VoiceMetrics
+         * @description Speaking stats computed from a voice session (`feedback_reports.voice_metrics`).
+         */
+        VoiceMetrics: {
+            /** Filler Count */
+            filler_count: number;
+            /** Filler Examples */
+            filler_examples: string[];
+            /** Filler Rate Per 100 */
+            filler_rate_per_100: number;
+            /** Fluency Score */
+            fluency_score: number;
+            /** Hard To Catch Words */
+            hard_to_catch_words: string[];
+            /** Long Pause Count */
+            long_pause_count: number;
+            /** Long Pauses Per Min */
+            long_pauses_per_min: number;
+            /** Pace Measured */
+            pace_measured: boolean;
+            /** Speaking Seconds */
+            speaking_seconds: number;
+            /** Words */
+            words: number;
+            /** Wpm */
+            wpm: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -892,6 +1039,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryOut"];
                 };
             };
             /** @description Validation Error */

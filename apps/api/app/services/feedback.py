@@ -14,6 +14,7 @@ from sqlalchemy.orm import selectinload
 
 from app.content.rubrics import Rubric, get_rubric
 from app.core.config import Settings
+from app.core.errors import NotFoundError, ReportNotReadyError
 from app.domain.enums import MessageRole, ReportStatus, ScoreSource, UsageKind
 from app.llm.base import LLMService
 from app.llm.errors import (
@@ -29,6 +30,7 @@ from app.llm.outputs import FeedbackAnalysis
 from app.llm.prompts import RenderedPrompt, render_prompt
 from app.models import FeedbackReport, Message, PracticeSession, Profile, Scenario, SkillScore, User
 from app.schemas.json_types import DimensionScoreOut
+from app.schemas.report import ReportOut, RetryOut
 from app.services.scoring import (
     filter_grammar_fixes,
     filter_highlights,
@@ -102,6 +104,43 @@ async def create_pending_report(db: AsyncSession, session: PracticeSession) -> F
 
 def _is_stale(updated_at: datetime) -> bool:
     return datetime.now(UTC) - updated_at >= STALE_AFTER
+
+
+async def get_report(db: AsyncSession, user_id: UUID, session_id: UUID) -> ReportOut:
+    report = await db.scalar(
+        select(FeedbackReport).where(
+            FeedbackReport.session_id == session_id, FeedbackReport.user_id == user_id
+        )
+    )
+    if report is None:
+        raise NotFoundError()
+    return ReportOut.model_validate(report)
+
+
+async def retry_report(db: AsyncSession, user_id: UUID, session_id: UUID) -> RetryOut:
+    # Deferred import: `app.worker.tasks.feedback` imports `generate_report` from this module,
+    # so importing it back at module level here would create a circular import.
+    from app.worker.tasks.feedback import enqueue_report
+
+    report = await db.scalar(
+        select(FeedbackReport)
+        .where(FeedbackReport.session_id == session_id, FeedbackReport.user_id == user_id)
+        .with_for_update()
+    )
+    if report is None:
+        raise NotFoundError()
+    stuck = report.status in (ReportStatus.PENDING, ReportStatus.RUNNING) and _is_stale(
+        report.updated_at
+    )
+    retryable = report.status in (ReportStatus.FAILED, ReportStatus.READY) or stuck
+    if not retryable:
+        raise ReportNotReadyError()
+
+    report.status = ReportStatus.PENDING
+    report.error_code = None
+    await db.commit()
+    await enqueue_report(report.id)
+    return RetryOut(status=ReportStatus.PENDING)
 
 
 async def _mark_failed(

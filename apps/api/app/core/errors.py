@@ -94,6 +94,12 @@ class ReplyInProgressError(AppError):
     message = "A reply is already being generated."
 
 
+class ReportNotReadyError(AppError):
+    status_code = 409
+    code = "report_not_ready"
+    message = "This report can't be retried right now."
+
+
 # The five codes below mirror `app/llm/errors.py`'s LLMError subclasses (api-contract.md's error
 # table) — the "AppError" suffix keeps them distinct where both are imported together, e.g. in
 # app/services/chat.py's LLMError -> AppError mapping.
