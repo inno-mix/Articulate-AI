@@ -11,6 +11,7 @@ from app.domain.enums import (
     PracticeMode,
     RecommendedMode,
     ScenarioCategory,
+    SessionPurpose,
     SessionStatus,
 )
 from app.models import Message, PracticeSession, Profile, Scenario, User, UserSettings
@@ -68,6 +69,7 @@ async def make_session(
     scenario_id: UUID,
     mode: PracticeMode = PracticeMode.TEXT,
     status: SessionStatus = SessionStatus.ACTIVE,
+    purpose: SessionPurpose = SessionPurpose.PRACTICE,
     user_turns: int = 0,
     llm_provider: str = "fake",
     llm_model: str = "fake",
@@ -77,6 +79,7 @@ async def make_session(
         scenario_id=scenario_id,
         mode=mode,
         status=status,
+        purpose=purpose,
         user_turns=user_turns,
         llm_provider=llm_provider,
         llm_model=llm_model,

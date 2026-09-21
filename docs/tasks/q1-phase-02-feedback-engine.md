@@ -193,7 +193,7 @@ Algorithm of `generate_report` (each numbered DB step is its own transaction):
    (log with `exc_info`). Never re-raise from the task.
 
 **Subtasks:**
-- [ ] 2.3.1 Failing integration tests (call `generate_report` directly with `FakeLLMService`):
+- [x] 2.3.1 Failing integration tests (call `generate_report` directly with `FakeLLMService`):
   - `test_generates_ready_report_with_scores_and_filtered_highlights` — fake analysis contains one
     valid and one invented quote → 1 highlight with correct `message_id`.
   - `test_writes_one_skill_score_per_dimension` (7 rows, 0–100 values).
@@ -208,10 +208,10 @@ Algorithm of `generate_report` (each numbered DB step is its own transaction):
   - `test_feedback_call_uses_temperature_zero` (fake `calls` list)
   - `test_job_for_deleted_session_exits_quietly` (delete the session, then run → returns `None`,
     no error logged as failure)
-- [ ] 2.3.2 Failing test `tests/integration/worker/test_feedback_task.py::test_task_runs_generation`
+- [x] 2.3.2 Failing test `tests/integration/worker/test_feedback_task.py::test_task_runs_generation`
   (InMemoryBroker; `broker.state` populated by the test fixture).
-- [ ] 2.3.3 Run → FAIL. Implement. Run → PASS.
-- [ ] 2.3.4 Commit: `feat(api): generate feedback reports in the worker`
+- [x] 2.3.3 Run → FAIL. Implement. Run → PASS.
+- [x] 2.3.4 Commit: `feat(api): generate feedback reports in the worker`
 
 **Pitfalls:** always **commit before enqueueing** (the worker may pick the job up before the API
 transaction commits). Tasks must not share the API's engine — create one on worker startup.
@@ -483,3 +483,17 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
   flags ambiguous-looking Unicode characters in code — literal escape-sequence text typed through
   the file-write tooling gets resolved to the actual character before reaching disk, so codepoint
   keys were the reliable fix, not a style preference · Follow-ups: none
+- 2026-09-21 · Task 2.3 · (this commit) · `make check` → API 184 passed + 2 deselected, Web 29
+  passed, lint/typecheck/format clean · Notes: `generate_report` is five DB transactions (claim →
+  load+build prompts → [LLM call, no session held] → save), matching the algorithm in the task
+  doc exactly; verified via 13 integration tests (12 service-level + 1 through the actual worker
+  task) all green on the first implementation pass after writing them red. Confirmed via Context7
+  (`/taskiq-python/taskiq`) that `WORKER_STARTUP`/`WORKER_SHUTDOWN` only fire for a real worker
+  process, never for `InMemoryBroker`'s client-side `.kiq()` calls in tests — so
+  `test_feedback_task.py` populates `broker.state.settings`/`.session_factory` directly in an
+  autouse fixture rather than relying on `app/worker/broker.py`'s startup handler, exactly as the
+  subtask note anticipated. `feedback_reports.rubric_version`/`.prompt_version` are `NOT NULL` but
+  aren't really known until generation completes; `create_pending_report` fills `rubric_version`
+  from the scenario (a real, known value) and leaves `prompt_version=""` as a placeholder — neither
+  field is exposed in `ReportOut` per api-contract.md §2 Reports, so a report is never shown in an
+  inconsistent state while pending · Follow-ups: none
