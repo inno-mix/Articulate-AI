@@ -93,9 +93,9 @@ def build_feedback_prompts(*, scenario: Scenario, profile: Profile, rubric: Rubr
 `GrammarFixOut`, `FeedbackAnalysis`).
 
 **Subtasks:**
-- [ ] 2.1.1 Write `content/rubrics/v1.yaml` from `ai-layer.md` §6 (label, one-sentence
+- [x] 2.1.1 Write `content/rubrics/v1.yaml` from `ai-layer.md` §6 (label, one-sentence
   description, anchors 1/3/5 per dimension).
-- [ ] 2.1.2 Failing tests:
+- [x] 2.1.2 Failing tests:
   - `test_rubrics.py`: `test_v1_has_seven_llm_dimensions_with_three_anchors`,
     `test_unknown_version_raises`.
   - `test_outputs.py`: `test_feedback_analysis_requires_each_dimension_once` (duplicate → error;
@@ -106,13 +106,13 @@ def build_feedback_prompts(*, scenario: Scenario, profile: Profile, rubric: Rubr
     `test_feedback_system_requires_english_output`,
     `test_feedback_user_contains_transcript_and_success_criteria`,
     `test_feedback_system_instructs_exact_quotes_from_user_lines`.
-- [ ] 2.1.3 Run → FAIL. Implement. Add a valid `FeedbackAnalysis` example to `fake_outputs.py`
+- [x] 2.1.3 Run → FAIL. Implement. Add a valid `FeedbackAnalysis` example to `fake_outputs.py`
   (quotes must match the fake conversation used in tests: use `"Hi Sam, thanks for the PR."`).
   Run → PASS.
-- [ ] 2.1.4 Commit: `feat(api): add rubric v1, feedback output models and prompts`
+- [x] 2.1.4 Commit: `feat(api): add rubric v1, feedback output models and prompts`
 
 **Acceptance criteria:**
-- [ ] Prompts render with every rubric anchor; output models reject malformed analyses.
+- [x] Prompts render with every rubric anchor; output models reject malformed analyses.
 
 ---
 
@@ -455,3 +455,19 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+- 2026-09-21 · Task 2.1 · (this commit) · `make check` → API 154 passed + 2 deselected, Web 29
+  passed, lint/typecheck/format clean · Notes: `app/llm/outputs.py`, `app/llm/fake_outputs.py` and
+  `app/llm/generation.py` already existed from Phase 1's LLM-layer scaffolding (ai-layer.md's
+  "binding" contract file was written whole in Task 1.3), so `test_outputs.py` was new but passed
+  immediately against existing code — no implementation change needed there beyond fixing the
+  `FeedbackAnalysis` example's highlight quote to be an exact substring of the E2E fake
+  conversation's first message (`"Hi Sam, thanks for the PR."`) instead of an unrelated placeholder
+  (`"so basically"`), so Task 2.2's deterministic quote filter keeps it and Task 2.7's E2E "You
+  said" card has something to show. `content/rubrics/v1.yaml` labels/anchors are copied verbatim
+  from `ai-layer.md` §6; one-sentence `description` per dimension is new prose (not in that table).
+  Extended the pre-existing `test_every_template_includes_the_english_language_rule` test's shared
+  context fixture with a `rubric` key so it keeps working once `feedback_system.md.j2` joins
+  `system_template_names()` (extra unused context keys are harmless under Jinja's `StrictUndefined`
+  — it only errors on variables a template actually references). `build_feedback_prompts` renders
+  both templates; only the system template's version is meant to be persisted as `prompt_version`
+  (Task 2.3) · Follow-ups: none

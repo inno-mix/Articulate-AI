@@ -23,9 +23,10 @@ FAKE_OUTPUTS: dict[str, dict[str, Any]] = {
         "improvements": ["Cut repeated points.", "State the ask earlier."],
         "highlights": [
             {
-                "quote": "so basically",
-                "issue": "Filler phrase that weakens the point.",
-                "better_version": "Drop it and start with the point directly.",
+                "quote": "Hi Sam, thanks for the PR.",
+                "issue": "Friendly, but doesn't say what's being reviewed or what's next.",
+                "better_version": "Hi Sam, thanks for the PR — I read through it and have two"
+                " things to flag.",
             }
         ],
         "grammar_fixes": [

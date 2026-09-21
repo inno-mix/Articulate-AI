@@ -1,0 +1,72 @@
+version: v1
+dimensions:
+  - key: clarity
+    label: Clarity
+    description: How clearly and quickly the main point comes across.
+    anchors:
+      - score: 1
+        text: Main point is hard to find or missing
+      - score: 3
+        text: Main point is present but buried or vague
+      - score: 5
+        text: Main point is stated early and unambiguously
+  - key: conciseness
+    label: Conciseness
+    description: Whether every sentence earns its place, without repetition or filler.
+    anchors:
+      - score: 1
+        text: Long, repetitive, many unnecessary details
+      - score: 3
+        text: Some filler or detours
+      - score: 5
+        text: Every sentence earns its place
+  - key: structure
+    label: Structure
+    description: Whether the message follows a clear, logical order.
+    anchors:
+      - score: 1
+        text: No order; jumps between topics
+      - score: 3
+        text: Some order but transitions are weak
+      - score: 5
+        text: Clear order (e.g. context → point → next step, STAR for interviews)
+  - key: audience_fit
+    label: Audience fit
+    description: Whether the language and level of detail match the listener.
+    anchors:
+      - score: 1
+        text: Jargon or detail wrong for the listener
+      - score: 3
+        text: Partly adapted
+      - score: 5
+        text: Language and depth fit the listener exactly
+  - key: tone
+    label: Tone
+    description: Whether the tone is professional, warm and appropriately assertive.
+    anchors:
+      - score: 1
+        text: Rude, defensive or overly casual
+      - score: 3
+        text: Mostly professional, occasional misstep
+      - score: 5
+        text: Professional, warm, appropriately assertive
+  - key: confidence
+    label: Confidence
+    description: Whether the user makes clear, direct commitments rather than hedging.
+    anchors:
+      - score: 1
+        text: Heavy hedging, apologising, vague commitments
+      - score: 3
+        text: Some hedging
+      - score: 5
+        text: Direct, owns decisions, clear commitments
+  - key: grammar_vocabulary
+    label: Grammar & vocabulary
+    description: Accuracy and naturalness of grammar and word choice.
+    anchors:
+      - score: 1
+        text: Frequent errors that block understanding
+      - score: 3
+        text: Noticeable errors, meaning clear
+      - score: 5
+        text: Accurate, natural word choice

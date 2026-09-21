@@ -1,7 +1,10 @@
 import jinja2
 import pytest
 
+from app.content.rubrics import get_rubric
 from app.llm.prompts import render_prompt, system_template_names, user_block
+
+RUBRIC = get_rubric("v1")
 
 PERSONA = {
     "name": "Dana",
@@ -24,6 +27,7 @@ def _roleplay_context(**overrides: object) -> dict[str, object]:
         "learner": LEARNER,
         "mode": "text",
         "coach_notes": [],
+        "rubric": RUBRIC,
     }
     context.update(overrides)
     return context
@@ -94,3 +98,41 @@ def test_hint_template_stays_under_30_words_instruction() -> None:
     rendered = render_prompt("hint", persona=PERSONA, scenario=SCENARIO, learner=LEARNER)
 
     assert "30 words" in rendered.text
+
+
+def test_feedback_system_contains_all_rubric_anchors() -> None:
+    rendered = render_prompt("feedback_system", learner=LEARNER, rubric=RUBRIC)
+
+    for dimension in RUBRIC.dimensions:
+        for anchor in dimension.anchors:
+            assert anchor.text in rendered.text, f"missing anchor for {dimension.key}"
+
+
+def test_feedback_system_requires_english_output() -> None:
+    rendered = render_prompt("feedback_system", learner=LEARNER, rubric=RUBRIC)
+
+    assert "English" in rendered.text
+
+
+def test_feedback_system_instructs_exact_quotes_from_user_lines() -> None:
+    rendered = render_prompt("feedback_system", learner=LEARNER, rubric=RUBRIC)
+
+    assert "exactly" in rendered.text.lower()
+    assert "USER:" in rendered.text
+
+
+def test_feedback_user_contains_transcript_and_success_criteria() -> None:
+    rendered = render_prompt(
+        "feedback_user",
+        scenario={
+            "title": "Give code review feedback",
+            "user_objective": "Explain two problems kindly.",
+            "success_criteria": ["Names both problems", "Uses a kind tone"],
+        },
+        transcript_text="[0] PERSONA (Sam): Hi!\n[1] USER: Hi Sam, thanks for the PR.",
+        speaking_summary=None,
+    )
+
+    assert "Hi Sam, thanks for the PR." in rendered.text
+    assert "Names both problems" in rendered.text
+    assert "Uses a kind tone" in rendered.text
