@@ -1,8 +1,10 @@
 "use client";
 
 import { ChevronDownIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import type { ScenarioDetail } from "@/features/scenarios/api";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +57,19 @@ export function SessionHeader({
         </div>
       )}
       {session.status !== "active" && (
-        <p className="mt-2 text-sm font-medium text-muted-foreground">This session has ended.</p>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-muted-foreground">This session has ended.</p>
+          {session.status === "ended" && (
+            <Button
+              nativeButton={false}
+              size="sm"
+              variant="outline"
+              render={<Link href={`/sessions/${session.id}/report`} />}
+            >
+              View your report
+            </Button>
+          )}
+        </div>
       )}
     </header>
   );

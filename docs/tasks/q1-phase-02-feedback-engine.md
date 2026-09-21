@@ -420,15 +420,15 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
      "Regenerate report" (secondary; calls retry), "Back to practice".
 
 **Subtasks:**
-- [ ] 2.6.1 Failing component tests: pending state text; a pending report whose `updated_at` is
+- [x] 2.6.1 Failing component tests: pending state text; a pending report whose `updated_at` is
   6 minutes old shows "Try again"; switches to ready when the mock changes;
   failed state shows mapped text and retry calls the endpoint; ready renders every section; empty
   grammar hides the table; score label thresholds (table test on a helper); "Practise again"
   posts a new session with the same scenario/mode.
-- [ ] 2.6.2 Run → FAIL. Implement. Run → PASS. `make lint`.
-- [ ] 2.6.3 Browser check with Ollama: end a real session → watch pending → ready. Keyboard and
+- [x] 2.6.2 Run → FAIL. Implement. Run → PASS. `make lint`.
+- [x] 2.6.3 Browser check with Ollama: end a real session → watch pending → ready. Keyboard and
   screen-reader labels on scores ("Clarity: 4 out of 5").
-- [ ] 2.6.4 Commit: `feat(web): add feedback report page`
+- [x] 2.6.4 Commit: `feat(web): add feedback report page`
 
 ---
 
@@ -548,3 +548,29 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
   `app/worker/broker.py` relies on to do this in a real worker process (confirmed via Context7,
   not guessed) · Follow-ups: none — the `english_ok` word-boundary fix and the eval-timeout fix
   were both applied immediately as part of this task, not deferred.
+- 2026-09-22 · Task 2.6 · (this commit) · `make check` → API 214 passed + 3 deselected, Web 45
+  passed, lint/typecheck/format clean · Browser check with real Ollama (`llama3.2:latest`): held a
+  2-turn code-review conversation, ended it, watched the report page go from "Analysing your
+  conversation…" to the full ready layout (score header, 7 skill rows, strengths/improvements,
+  actions) after ~35 s. Accessibility tree confirmed the required score labels verbatim (e.g.
+  "Clarity: 5 out of 5"). "Practise again" correctly started a fresh session for the same
+  scenario. Both "View your report" buttons (session header + footer panel) work. Deleted both
+  verification sessions and stopped the manually-started servers afterward. Notes: two React
+  Compiler purity-rule lint errors surfaced that don't show up in `pytest`/older ESLint configs —
+  `Date.now()` can't be called directly in a render body (`react-hooks/purity`), and `setState`
+  can't be called synchronously inside an effect body on the very first run
+  (`react-hooks/set-state-in-effect`); fixed with a small `useNow()` hook that seeds via a lazy
+  `useState(() => Date.now())` initializer (not flagged — verified empirically that the compiler
+  treats lazy initializers differently from direct render-body calls) and updates via
+  `setInterval` inside `useEffect`. Also found and fixed two `getByText` test-matcher issues from
+  literal "• " bullet characters and curly-quote entities splitting text nodes — switched to
+  `list-disc` styled `<ul>`s instead of manual bullets, and used a regex matcher for the quoted
+  highlight text. The `<a href>` rendered via `Button render={<Link/>}` carries `role="button"`
+  (Base UI's own behavior, already established in Task 1.7), so it must be queried as
+  `getByRole("button", ...)`, not `"link"`. While testing pending→ready polling live in the
+  browser pane, `refetchInterval` appeared to never fire; root-caused to
+  `document.visibilityState === "hidden"` in the automated browser pane (confirmed via
+  `javascript_tool`) — TanStack Query pauses interval polling on a hidden document by design and
+  refetches on focus instead, so this is a testing-tool artifact, not a product bug; reloading the
+  page (which always does an initial fetch regardless of visibility) confirmed the ready state
+  renders correctly once data arrives · Follow-ups: none.

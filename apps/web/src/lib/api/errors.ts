@@ -24,6 +24,9 @@ const MESSAGES: Record<string, string> = {
   not_found: "We couldn't find that.",
   local_user_missing: "The local user hasn't been created yet. Run make seed, then reload.",
   llm_unavailable: "The AI model isn't reachable. Check that Ollama is running, then try again.",
+  llm_invalid_output:
+    "The AI returned an unreadable report. Try again — it usually works on the second attempt.",
+  report_not_ready: "This report can't be retried right now.",
   origin_not_allowed: "This request came from another site, so it was blocked.",
   invalid_host: "Open the app from localhost to use it.",
 };

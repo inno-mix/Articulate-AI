@@ -87,9 +87,21 @@ export function SessionView({ sessionId }: { sessionId: string }) {
                 ? " — this one was too short for a feedback report."
                 : "."}
             </span>
-            <Button nativeButton={false} size="sm" render={<Link href="/practice" />}>
-              Back to practice
-            </Button>
+            <div className="flex items-center gap-2">
+              {session.data.status === "ended" && (
+                <Button
+                  nativeButton={false}
+                  size="sm"
+                  variant="outline"
+                  render={<Link href={`/sessions/${sessionId}/report`} />}
+                >
+                  View your report
+                </Button>
+              )}
+              <Button nativeButton={false} size="sm" render={<Link href="/practice" />}>
+                Back to practice
+              </Button>
+            </div>
           </div>
         )}
 

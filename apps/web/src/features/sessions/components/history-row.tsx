@@ -36,6 +36,11 @@ export function HistoryRow({ session }: { session: SessionSummary }) {
         </p>
       </Link>
       <div className="flex items-center gap-3">
+        {session.overall_score != null && (
+          <span className="text-sm font-medium tabular-nums text-muted-foreground">
+            {session.overall_score}/100
+          </span>
+        )}
         <Badge variant={session.status === "active" ? "default" : "secondary"}>
           {STATUS_LABEL[session.status]}
         </Badge>
