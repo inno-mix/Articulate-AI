@@ -435,9 +435,9 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
 ### Task 2.7 — E2E: report journey
 
 **Files:** extend `apps/web/e2e/text-practice.spec.ts`.
-- [ ] 2.7.1 After ending, click "View your report" → wait for "Goal" badge → assert overall score
+- [x] 2.7.1 After ending, click "View your report" → wait for "Goal" badge → assert overall score
   visible, 7 skill rows, at least one "You said" card (fake analysis quote).
-- [ ] 2.7.2 `make test-e2e` → PASS. Commit: `test(web): cover report generation in e2e`
+- [x] 2.7.2 `make test-e2e` → PASS. Commit: `test(web): cover report generation in e2e`
 
 ## Phase verification
 
@@ -574,3 +574,45 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
   refetches on focus instead, so this is a testing-tool artifact, not a product bug; reloading the
   page (which always does an initial fetch regardless of visibility) confirmed the ready state
   renders correctly once data arrives · Follow-ups: none.
+- 2026-09-22 · Task 2.7 · (this commit) · `make test-e2e` → 4 passed (2 smoke + 2 text-practice,
+  the first now covering the full report journey). Fixed a Playwright strict-mode violation: the
+  fake highlight's quote ("Hi Sam, thanks for the PR.") and its `better_version` both start with
+  "thanks for the PR", so `getByText(/thanks for the PR/)` matched two elements — scoped with
+  `.first()` · Follow-ups: none.
+- 2026-09-22 · Phase verification (all 5 items, checklist above) · `make check` and
+  `make test-e2e` → PASS (see the Task 2.6/2.7 entries above for fresh evidence).
+  1. **Three scenarios, one deliberately poor** (real Ollama, `llama3.2:latest`): two good
+     conversations (Tasks 2.4 and 2.6's manual checks, overall_score 89 and 86) plus one
+     deliberately rambling, grammar-loose conversation for this check — overall_score 50, clarity
+     2, structure 2, conciseness 3 (vs 4–5 on the good ones), confirming the report differentiates
+     quality. The highlight and grammar-fix quotes were exact substrings of what the user actually
+     typed, verbatim.
+  2. **Worker down → recovery**, against the real dev DB/Redis (not the fake test broker):
+     stopped the worker, ended a session (report created `pending`, job sits queued in Redis).
+     Rather than waiting the full 2/5 minutes in real time — already covered precisely by fast,
+     deterministic tests (`test_retry_stale_running_report_requeues`, and the frontend's "shows
+     Try again on a pending report whose `updated_at` is 6 minutes old" test) — pushed
+     `created_at`/`updated_at` back via `psql` to cross each threshold, then loaded the real
+     report page: "Still working" text appeared once `created_at` was 3 minutes old, "Try again"
+     once `updated_at` was 6 minutes old. Clicked "Try again" (real `POST .../report/retry`, 202).
+     Started the worker: both the original queued job and the retry's job were picked up (visible
+     in worker logs), report reached `ready`.
+  3. **Ollama unreachable → recovery**: a second temporary API+worker pair (port 8200, a separate
+     Redis db so it never raced with the main dev worker, same Postgres DB) with
+     `OLLAMA_BASE_URL` pointed at an unreachable address. Held a 2-turn conversation through it
+     (the user's own messages still save even though the roleplay reply itself fails with
+     `llm_unavailable`, exactly as found in Phase 1), ended the session, and the report reached
+     `status: "failed"`, `error_code: "llm_unavailable"`. Restarted the temporary worker pointed
+     at the real Ollama and called retry: report reached `ready` (overall_score 68). First
+     recovery attempt gave a false failure because `pkill -f` couldn't match the broken worker's
+     process (env vars passed via `env VAR=val cmd` aren't visible in `ps aux`'s command line on
+     macOS, so the pattern matched nothing) — the old broken-Ollama worker kept running and raced
+     the new one for the retried job; found via `ps aux` showing two worker process groups, fixed
+     by killing the stale PIDs directly and re-running with a single clean worker.
+  4. **Reference run meets target; gap recorded**: done in Task 2.5 — `gemini-3.7-flash` reached
+     94.2% in-range / 0% schema failures (target ≥80%/≤5%); `llama3.2:latest`'s 80.9%/3.8% gap vs
+     the reference is recorded in ADR-0012.
+  5. **`make check` and `make test-e2e` → PASS**: both green as of the Task 2.7 commit.
+  · Follow-ups: none. All verification sessions and every manually-started server (main dev
+  instance and the two temporary port-8200 instances) were deleted/stopped afterward; the
+  temporary Redis db was flushed.

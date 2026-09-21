@@ -27,6 +27,24 @@ test("complete a text practice session and see it in history", async ({ page }) 
 
   await expect(page.getByText(/Session ended/)).toBeVisible();
 
+  await page.getByRole("button", { name: "View your report" }).first().click();
+  await expect(page.getByText(/Goal/)).toBeVisible({ timeout: 10000 });
+
+  await expect(page.getByText("/100")).toBeVisible();
+  for (const label of [
+    "Clarity",
+    "Conciseness",
+    "Structure",
+    "Audience fit",
+    "Tone",
+    "Confidence",
+    "Grammar & vocabulary",
+  ]) {
+    await expect(page.getByText(label, { exact: true })).toBeVisible();
+  }
+  await expect(page.getByText("You said")).toBeVisible();
+  await expect(page.getByText(/thanks for the PR/).first()).toBeVisible();
+
   await page.goto("/sessions");
   await expect(page.getByText("Give code review feedback")).toBeVisible();
   await expect(page.getByText("Ended")).toBeVisible();
