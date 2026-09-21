@@ -1,6 +1,7 @@
 """Pydantic models for JSONB columns (data-model.md)."""
 
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -14,3 +15,52 @@ class Persona(BaseModel):
     role: Annotated[str, Field(max_length=80)]
     personality: Annotated[str, Field(max_length=200)]
     goals: Annotated[str, Field(max_length=200)]
+
+
+class DimensionScoreOut(BaseModel):
+    """One rubric dimension's score (`feedback_reports.dimension_scores`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dimension: str
+    score: int
+    reason: str
+
+
+class Highlight(BaseModel):
+    """A quote-anchored moment to improve (`feedback_reports.highlights`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    message_id: UUID | None
+    quote: str
+    issue: str
+    better_version: str
+
+
+class GrammarFix(BaseModel):
+    """A quote-anchored grammar correction (`feedback_reports.grammar_fixes`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    original: str
+    corrected: str
+    explanation: str
+
+
+class VoiceMetrics(BaseModel):
+    """Speaking stats computed from a voice session (`feedback_reports.voice_metrics`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    speaking_seconds: float
+    words: int
+    wpm: float
+    pace_measured: bool
+    filler_count: int
+    filler_rate_per_100: float
+    filler_examples: list[str]
+    long_pause_count: int
+    long_pauses_per_min: float
+    hard_to_catch_words: list[str]
+    fluency_score: int

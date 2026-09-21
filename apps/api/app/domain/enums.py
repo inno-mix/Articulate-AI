@@ -79,3 +79,16 @@ class UsageKind(StrEnum):
     STT = "stt"
     TTS = "tts"
     PRONUNCIATION = "pronunciation"
+
+
+class ReportStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    READY = "ready"
+    FAILED = "failed"
+
+
+class ScoreSource(StrEnum):
+    SESSION = "session"
+    PRONUNCIATION = "pronunciation"
+    DRILL = "drill"

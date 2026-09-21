@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from app.core.config import Settings
 from app.core.migrations import downgrade_base, upgrade_head
 
-EXPECTED_TABLES = {"users", "profiles", "user_settings"}
+EXPECTED_TABLES = {"users", "profiles", "user_settings", "feedback_reports", "skill_scores"}
 
 
 async def table_names(engine: AsyncEngine) -> set[str]:
