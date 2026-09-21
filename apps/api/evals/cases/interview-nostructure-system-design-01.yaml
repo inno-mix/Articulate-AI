@@ -1,0 +1,16 @@
+id: interview-nostructure-system-design-01
+scenario_slug: system-design-interview-url-shortener
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Let's design a URL shortener. Where would you start?
+- role: user
+  content: Ok so for a URL shortener I guess you'd need a database, and some way to make short codes,
+    maybe random, and then when someone clicks it you look it up and redirect, oh and you'd probably want
+    it to be fast, and handle a lot of traffic, maybe caching helps, and also analytics could be a thing,
+    not sure what order to explain all this though.
+expected:
+  structure:
+  - 1
+  - 2

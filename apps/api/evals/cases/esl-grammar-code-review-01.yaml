@@ -1,0 +1,19 @@
+id: esl-grammar-code-review-01
+scenario_slug: code-review-give-feedback
+mode: text
+learner_level: B1
+transcript:
+- role: assistant
+  content: Hey, thanks for reviewing my PR! Let me know what you think.
+- role: user
+  content: Hi Sam, thanks for make this PR. I am see two problem. First, when someone is send bad data,
+    the database is crash because no check before. Second, the query for list users, it run inside the
+    loop, so when have many user it become very slow. Please you fix this two thing before we merge, is
+    ok?
+expected:
+  grammar_vocabulary:
+  - 1
+  - 2
+  clarity:
+  - 3
+  - 5

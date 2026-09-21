@@ -1,0 +1,18 @@
+id: esl-grammar-ask-for-help-01
+scenario_slug: ask-senior-for-help
+mode: text
+learner_level: B1
+transcript:
+- role: assistant
+  content: Hey, what's up?
+- role: user
+  content: Hi Wei, I am stuck 45 minute for bug, the retry queue is process same message two time when
+    load is high. I already check is not duplicate publish, consumer is get message one time but process
+    two time. I try add mutex but not fix. You have time for pair, or maybe I miss something obvious?
+expected:
+  grammar_vocabulary:
+  - 1
+  - 2
+  clarity:
+  - 3
+  - 5

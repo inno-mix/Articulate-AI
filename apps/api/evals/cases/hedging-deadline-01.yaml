@@ -1,0 +1,16 @@
+id: hedging-deadline-01
+scenario_slug: push-back-on-deadline
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Can we still hit the deadline in two weeks?
+- role: user
+  content: Um, sorry, I don't know, maybe this is a dumb question, but I was sort of wondering if maybe
+    possibly we could, I don't know, maybe think about perhaps extending the deadline a little bit? I'm
+    really sorry if that's not possible, I totally understand if it's not, I just thought I'd maybe ask,
+    sorry.
+expected:
+  confidence:
+  - 1
+  - 2

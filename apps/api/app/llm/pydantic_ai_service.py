@@ -47,6 +47,12 @@ os.environ.setdefault("PYDANTIC_AI_NO_BANNER", "1")
 T = TypeVar("T", bound=BaseModel)
 OutputMode = Literal["native", "tool"]
 
+
+def thinks_by_default(model_name: str) -> bool:
+    """Whether `model_name` reasons unless told not to (ai-layer.md §3: qwen3 models "think")."""
+    return "qwen3" in model_name
+
+
 # generate_structured retries this many times on a validation failure before giving up
 # (ai-layer.md §1).
 _STRUCTURED_RETRIES = 2
@@ -83,6 +89,7 @@ class PydanticAILLMService:
         model_name: str | None = None,
         output_mode: OutputMode = "tool",
         timeout_seconds: float = 30.0,
+        disable_thinking: bool = False,
     ) -> None:
         self._model = model
         self.provider = provider
@@ -90,6 +97,15 @@ class PydanticAILLMService:
         self._output_mode = output_mode
         self._timeout_seconds = timeout_seconds
         self._last_usage: LLMUsage | None = None
+        self._disable_thinking = disable_thinking
+
+    def _settings(self, temperature: float) -> ModelSettings:
+        settings = ModelSettings(temperature=temperature)
+        if self._disable_thinking:
+            # qwen3 models "think" by default, adding real latency (ai-layer.md §3); other
+            # models silently ignore `thinking=False` if they don't support disabling it.
+            settings["thinking"] = False
+        return settings
 
     async def stream_chat(
         self,
@@ -105,7 +121,7 @@ class PydanticAILLMService:
             async with agent.run_stream(
                 user_message,
                 message_history=_to_model_messages(history),
-                model_settings=ModelSettings(temperature=temperature),
+                model_settings=self._settings(temperature),
             ) as result:
                 # debounce_by=None: forward every delta immediately (no artificial buffering).
                 stream = result.stream_text(delta=True, debounce_by=None)
@@ -137,7 +153,7 @@ class PydanticAILLMService:
         start = time.monotonic()
         try:
             result = await asyncio.wait_for(
-                agent.run(prompt, model_settings=ModelSettings(temperature=temperature)),
+                agent.run(prompt, model_settings=self._settings(temperature)),
                 timeout=self._timeout_seconds,
             )
         except TimeoutError as exc:
@@ -165,7 +181,7 @@ class PydanticAILLMService:
             result = await asyncio.wait_for(
                 agent.run(
                     prompt,
-                    model_settings=ModelSettings(temperature=temperature),
+                    model_settings=self._settings(temperature),
                     retries=_STRUCTURED_RETRIES,
                 ),
                 timeout=self._timeout_seconds,

@@ -1,0 +1,20 @@
+id: rambling-architecture-01
+scenario_slug: explain-architecture-to-new-teammate
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Can you walk me through how the main pieces fit together?
+- role: user
+  content: Ok so basically we have like a bunch of services, and there's the API one which is kind of
+    the main one I guess, and then there's also this other thing for the workers, which, I mean it's kind
+    of related to the API but it's separate, and then there's the database, obviously, and also redis
+    for some stuff, caching mostly but also some other things, and honestly there's a lot of history here
+    so some of it doesn't totally make sense anymore but that's basically the gist of it.
+expected:
+  clarity:
+  - 1
+  - 2
+  conciseness:
+  - 1
+  - 2

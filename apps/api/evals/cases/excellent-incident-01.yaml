@@ -1,0 +1,35 @@
+id: excellent-incident-01
+scenario_slug: incident-status-update
+mode: text
+learner_level: C1
+transcript:
+- role: assistant
+  content: What's the status on the outage?
+- role: user
+  content: 'Quick update on the API outage: users are seeing 500s on checkout since 2:14pm, about 30%
+    of traffic affected. Root cause looks like the database connection pool being exhausted after last
+    night''s deploy. We''re rolling that deploy back now, ETA 10 minutes. I''ll send the next update at
+    2:45 or sooner if anything changes.'
+expected:
+  clarity:
+  - 4
+  - 5
+  conciseness:
+  - 4
+  - 5
+  structure:
+  - 4
+  - 5
+  audience_fit:
+  - 4
+  - 5
+  tone:
+  - 4
+  - 5
+  confidence:
+  - 4
+  - 5
+  grammar_vocabulary:
+  - 4
+  - 5
+objective_met: true

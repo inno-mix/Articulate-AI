@@ -1,0 +1,35 @@
+id: excellent-ask-for-help-01
+scenario_slug: ask-senior-for-help
+mode: text
+learner_level: C1
+transcript:
+- role: assistant
+  content: Hey, what's up?
+- role: user
+  content: Hey Wei, I've been stuck for about 45 minutes on a bug where the retry queue processes the
+    same message twice under load. I've confirmed it's not a duplicate publish -- the consumer is definitely
+    getting the message once but somehow processing it twice. I tried adding a mutex around the handler
+    but it didn't help. Do you have 15 minutes to pair on it, or know an obvious thing I might be missing?
+expected:
+  clarity:
+  - 4
+  - 5
+  conciseness:
+  - 4
+  - 5
+  structure:
+  - 4
+  - 5
+  audience_fit:
+  - 4
+  - 5
+  tone:
+  - 4
+  - 5
+  confidence:
+  - 4
+  - 5
+  grammar_vocabulary:
+  - 4
+  - 5
+objective_met: true

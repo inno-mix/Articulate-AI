@@ -111,11 +111,16 @@ Output modes for `generate_structured`:
 - **Context length pitfall:** Ollama's default context window is small. Set it for the app server:
   `launchctl setenv OLLAMA_CONTEXT_LENGTH 8192` then restart Ollama. Verify with
   `ollama ps` (CONTEXT column) after a request.
-- Candidate models (8 GB RAM): `llama3.2:latest` (3B, installed), `qwen3:4b`. The Phase 2 eval run
-  picks the default; set `OLLAMA_MODEL` accordingly. Never run two models at once
+- **Default model: `llama3.2:latest`** (3B), chosen by the Phase 2 eval run over `qwen3:4b`
+  (ADR-0012: 80.9% vs 0% in-range — qwen3:4b timed out on every case, even with thinking disabled
+  and a 240 s budget, because `NativeOutput`'s grammar-constrained decoding for the full
+  `FeedbackAnalysis` schema is too slow for a 4B model on 8 GB RAM). Never run two models at once
   (`OLLAMA_MAX_LOADED_MODELS=1`).
-- `qwen3` models "think" by default; if chosen, disable thinking for our calls (check current
-  Ollama/Pydantic AI docs for the flag) so latency stays low.
+- `qwen3` models "think" by default; `PydanticAILLMService(disable_thinking=True)` sets
+  `thinking=False` via `ModelSettings`, auto-applied by `app/llm/factory.py` and `evals/run.py` for
+  any model name containing `"qwen3"` (`thinks_by_default()`). Confirmed empirically that this cuts
+  latency a lot for small calls — it just isn't enough to make `qwen3:4b` viable for the feedback
+  schema specifically (ADR-0012).
 - Startup guard in `Settings` validator: `APP_ENV == "production"` and
   `LLM_PROVIDER in {"ollama", "fake"}` → raise `ValueError("Ollama/fake LLM are development-only")`.
 
@@ -344,6 +349,8 @@ Each dimension has `label`, `description` and anchors for scores 1, 3 and 5:
 - Evals are **not** part of `pytest`; they are run manually whenever prompts, rubric or model
   change (the reference run costs money — ask the owner first), and the result summaries are pasted
   into the task completion log.
+- First run and default-model choice: ADR-0012 (reference: Google `gemini-3.7-flash`, 94.2%
+  in-range / 0% schema failures; default Ollama: `llama3.2:latest`, chosen over `qwen3:4b`).
 
 ## 9. Usage tracking
 

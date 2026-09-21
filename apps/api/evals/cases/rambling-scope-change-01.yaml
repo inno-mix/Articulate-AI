@@ -1,0 +1,20 @@
+id: rambling-scope-change-01
+scenario_slug: client-call-scope-change
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: So what does this change mean for the timeline and budget?
+- role: user
+  content: So basically, um, the thing is, the client wants this new feature, and it's, well it's not
+    exactly small, and so what happened is we kind of looked at it and there's a lot of pieces, like there's
+    the UI part, and then there's also the backend part, and honestly some of it touches the billing system
+    which is always kind of scary, so basically it's going to take longer and cost more, I don't have
+    exact numbers yet but it's definitely more than what we scoped originally.
+expected:
+  clarity:
+  - 1
+  - 2
+  conciseness:
+  - 1
+  - 2

@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     azure_speech_region: str | None = None
     azure_speech_max_concurrency: int = 1
 
+    # Development-only: read by evals/ and live tests, never by the app runtime (ADR-0015, S14).
+    eval_anthropic_api_key: SecretStr | None = None
+    eval_openai_api_key: SecretStr | None = None
+    eval_google_api_key: SecretStr | None = None
+
     @model_validator(mode="after")
     def _reject_development_only_values_in_production(self) -> Self:
         if self.app_env != "production":
@@ -63,6 +68,8 @@ class Settings(BaseSettings):
             problems.append("PRONUNCIATION_PROVIDER=fake")
         if self.auth_mode == "local_single_user":
             problems.append("AUTH_MODE=local_single_user")
+        if self.eval_anthropic_api_key or self.eval_openai_api_key or self.eval_google_api_key:
+            problems.append("eval keys are development-only")
         if problems:
             joined = ", ".join(problems)
             raise ValueError(

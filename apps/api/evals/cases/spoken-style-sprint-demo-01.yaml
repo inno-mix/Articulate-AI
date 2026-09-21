@@ -1,0 +1,15 @@
+id: spoken-style-sprint-demo-01
+scenario_slug: sprint-demo
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Ready when you are -- what did the team ship this sprint?
+- role: user
+  content: So, um, this sprint we, uh, shipped the, um, the new login flow, and, uh, we also, um, fixed
+    a bunch of, uh, bugs, and, um, next sprint we're, uh, gonna work on, um, the dashboard redesign I
+    think.
+expected:
+  conciseness:
+  - 1
+  - 3

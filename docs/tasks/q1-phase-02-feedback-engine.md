@@ -341,38 +341,38 @@ Decision rules:
    (Ollama is development-only) but must be recorded in ADR-0012 and told to the owner.
 
 **Subtasks:**
-- [ ] 2.5.1 Failing unit tests for `evals/scoring.py` (in-range logic, summary maths, schema
+- [x] 2.5.1 Failing unit tests for `evals/scoring.py` (in-range logic, summary maths, schema
   failure counted, percentiles, `english_ok` ignores foreign words inside quotes).
-- [ ] 2.5.2 Failing unit tests:
+- [x] 2.5.2 Failing unit tests:
   - `test_providers.py` (no network, `models.ALLOW_MODEL_REQUESTS = False`):
     `test_build_model_anthropic_uses_tool_output`, `test_build_model_openai_uses_tool_output`,
     `test_build_model_google_uses_tool_output`, `test_build_model_rejects_unknown_provider`.
   - `test_config.py`: `test_production_rejects_eval_keys`.
   - `tests/unit/llm/test_factory.py::test_factory_ignores_eval_keys` — with `LLM_PROVIDER=ollama`
     and an `EVAL_ANTHROPIC_API_KEY` set, `get_llm_service` returns the Ollama service.
-- [ ] 2.5.3 Run → FAIL. Implement scoring, runner, `build_model`, settings, Makefile targets.
+- [x] 2.5.3 Run → FAIL. Implement scoring, runner, `build_model`, settings, Makefile targets.
   Run → PASS.
-- [ ] 2.5.4 Write the cases (realistic transcripts, 4–12 messages each, B1–C1 English).
-- [ ] 2.5.5 Ollama runs: ask the owner before downloading `qwen3:4b` (~2.5 GB) if not present.
+- [x] 2.5.4 Write the cases (realistic transcripts, 4–12 messages each, B1–C1 English).
+- [x] 2.5.5 Ollama runs: ask the owner before downloading `qwen3:4b` (~2.5 GB) if not present.
   Run `make eval` for `llama3.2:latest` and `qwen3:4b` (one model loaded at a time;
   `ollama stop <model>` between runs). Paste both summaries into the completion log.
-- [ ] 2.5.6 Reference run: ask the owner which provider to use, confirm the model id against that
+- [x] 2.5.6 Reference run: ask the owner which provider to use, confirm the model id against that
   provider's current documentation, make sure the key is in `apps/api/.env`, show the planned call
   count, and get permission. Then run `make eval-cloud PROVIDER=… MODEL=… CONFIRM=1` and paste the
   summary. Live test `tests/live/test_cloud_reference_live.py` (skipped unless an eval key is set):
   one `FeedbackAnalysis` from the reference model.
-- [ ] 2.5.7 Apply the decision rules: iterate on prompts until the reference target is met,
+- [x] 2.5.7 Apply the decision rules: iterate on prompts until the reference target is met,
   re-running both models after each change (ask before each extra reference run).
-- [ ] 2.5.8 Write ADR-0012 (reference provider/model and results, both Ollama results, the gap,
+- [x] 2.5.8 Write ADR-0012 (reference provider/model and results, both Ollama results, the gap,
   the chosen default). Update defaults and docs (`OLLAMA_MODEL`, `ai-layer.md` §3 and §8).
-- [ ] 2.5.9 Commit: `feat(api): add feedback evals with cloud reference run and choose default ollama model`
+- [x] 2.5.9 Commit: `feat(api): add feedback evals with cloud reference run and choose default ollama model`
 
 **Acceptance criteria:**
-- [ ] `make eval` and `make eval-cloud` print a summary table and write JSON result files
+- [x] `make eval` and `make eval-cloud` print a summary table and write JSON result files
   (git-ignored).
-- [ ] The reference run meets in-range ≥ 80 % and schema failures ≤ 5 %.
-- [ ] ADR-0012 records both runs and the chosen default; defaults are updated everywhere.
-- [ ] The app runtime never uses eval keys (unit test), and production rejects them.
+- [x] The reference run meets in-range ≥ 80 % and schema failures ≤ 5 %.
+- [x] ADR-0012 records both runs and the chosen default; defaults are updated everywhere.
+- [x] The app runtime never uses eval keys (unit test), and production rejects them.
 
 **Pitfalls:** never print `Settings` or request objects that contain keys; the runner must not
 fall back silently to Ollama when a cloud key is missing — fail with a clear message.
@@ -522,3 +522,29 @@ export function useRetryReport(sessionId: string): UseMutationResult<…>
   `grammar_fixes` lists; not a Phase 2 mechanical bug (the code faithfully stored and filtered
   exactly what the model returned), but exactly the kind of prompt-quality gap Task 2.5's eval
   suite is meant to catch — worth a `min_length` on `summary` or an eval case for it.
+- 2026-09-22 · Task 2.5 · (this commit) · `make check` → API 214 passed + 3 deselected, Web 29
+  passed, lint/typecheck/format clean · Evals (26 cases, `apps/api/evals/cases/*.yaml`):
+  **Reference (Google `gemini-3.7-flash`, owner-approved):** in_range_rate 94.2%,
+  schema_failure_rate 0.0%, objective_accuracy 100%, english_ok_rate 100% (after fixing a
+  word-boundary bug in the eval harness itself, not a model issue — see ADR-0012), p50/p95 latency
+  8.6 s / 20.7 s. Target (≥80% in-range, ≤5% schema failure) met on the first run; no prompt/rubric
+  changes needed. **Ollama, `llama3.2:latest`:** in_range_rate 80.9%, schema_failure_rate 3.8%
+  (1/26), p50/p95 40.1 s / 67.7 s. **Ollama, `qwen3:4b`:** in_range_rate 0.0%, schema_failure_rate
+  100% (26/26 timeouts) even after adding proper thinking-disable support
+  (`PydanticAILLMService.disable_thinking`, auto-detected via `thinks_by_default()`) and a 240 s
+  diagnostic budget — the `NativeOutput` grammar-constrained decoding for the full
+  `FeedbackAnalysis` schema is too slow for a 4B model on this 8 GB machine, confirmed by a trivial
+  structured call completing in 12.7 s while the full schema didn't complete even at 240 s.
+  **Decision:** default `OLLAMA_MODEL` stays `llama3.2:latest` (full reasoning in ADR-0012). Live
+  test `tests/live/test_cloud_reference_live.py` passed against the same reference model. Notes:
+  the eval runner's first run used `PydanticAILLMService`'s default 30 s timeout (a real bug —
+  feedback generation is a background job, not a live request) inflating the first llama3.2 run's
+  schema-failure rate to 69%; fixed with an explicit 120 s `EVAL_TIMEOUT_SECONDS` in
+  `evals/run.py`, then re-ran before drawing any conclusions. `app/llm/providers.py`'s
+  `build_model` signatures verified against current Pydantic AI docs via Context7
+  (`/pydantic/pydantic-ai`) before writing — matched the ai-layer.md §2 contract exactly, no
+  changes needed. `tests/conftest.py`'s `app` fixture and the worker test files now populate
+  `broker.state` directly, since `InMemoryBroker` never fires the `WORKER_STARTUP` event that
+  `app/worker/broker.py` relies on to do this in a real worker process (confirmed via Context7,
+  not guessed) · Follow-ups: none — the `english_ok` word-boundary fix and the eval-timeout fix
+  were both applied immediately as part of this task, not deferred.

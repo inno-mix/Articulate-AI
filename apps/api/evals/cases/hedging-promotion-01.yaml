@@ -1,0 +1,15 @@
+id: hedging-promotion-01
+scenario_slug: one-on-one-promotion
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: What's on your mind for our 1:1 today?
+- role: user
+  content: Sorry to bring this up, I know you're busy, but I was maybe wondering, if it's not too much
+    trouble, whether perhaps we could sort of talk about promotion sometime, no rush at all though, whenever
+    works, sorry again for asking.
+expected:
+  confidence:
+  - 1
+  - 2

@@ -1,0 +1,15 @@
+id: jargon-sprint-demo-01
+scenario_slug: sprint-demo
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Ready when you are -- what did the team ship this sprint?
+- role: user
+  content: So this sprint we refactored the middleware stack, added idempotency to the webhook consumer,
+    migrated the ORM's N+1 queries to eager-loaded joins, and set up a circuit breaker around the third-party
+    API client to prevent cascading failures during upstream outages.
+expected:
+  audience_fit:
+  - 1
+  - 2

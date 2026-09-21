@@ -1,0 +1,14 @@
+id: rude-design-review-01
+scenario_slug: disagree-in-design-review
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Here's the proposed design -- what do you think?
+- role: user
+  content: Honestly this design is a mess and I don't know why we're even discussing it. Whoever came
+    up with this clearly didn't think it through. We're not doing it this way, end of story.
+expected:
+  tone:
+  - 1
+  - 2

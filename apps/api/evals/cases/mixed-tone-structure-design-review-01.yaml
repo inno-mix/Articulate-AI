@@ -1,0 +1,20 @@
+id: mixed-tone-structure-design-review-01
+scenario_slug: disagree-in-design-review
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Here's the proposed design -- what do you think?
+- role: user
+  content: Thanks for putting this together, Victor, I can tell a lot of thought went into it. So, um,
+    I have some concerns, like there's the caching thing, and also I was thinking about the failure case,
+    oh and actually before that there's the question of how it handles retries, and I guess overall I'm
+    just not sure it's the right call but I really appreciate you sharing it and I don't want to be difficult
+    about it.
+expected:
+  tone:
+  - 4
+  - 5
+  structure:
+  - 1
+  - 2

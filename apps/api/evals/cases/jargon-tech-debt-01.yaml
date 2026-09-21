@@ -1,0 +1,16 @@
+id: jargon-tech-debt-01
+scenario_slug: explain-tech-debt-to-pm
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: How's the feature coming along? Anything I should know about?
+- role: user
+  content: Dana, the issue is our payments module has significant tech debt from accumulated shortcuts
+    -- tightly coupled retry logic, no idempotency keys on the reconciliation job, and the N+1 query pattern
+    in the ledger sync. We need to refactor the pub/sub consumer to decouple it from the synchronous write
+    path before we can safely scale horizontally.
+expected:
+  audience_fit:
+  - 1
+  - 2

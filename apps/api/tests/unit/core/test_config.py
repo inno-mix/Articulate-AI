@@ -62,6 +62,16 @@ def test_production_rejects_local_single_user() -> None:
         )
 
 
+def test_production_rejects_eval_keys() -> None:
+    with pytest.raises(ValidationError, match="development-only"):
+        make_settings(
+            app_env="production",
+            llm_provider="user_credentials",
+            auth_mode="accounts",
+            eval_anthropic_api_key="sk-eval-key",
+        )
+
+
 def test_secret_values_are_not_in_repr() -> None:
     settings = make_settings(deepgram_api_key="dg-super-secret-value")
 

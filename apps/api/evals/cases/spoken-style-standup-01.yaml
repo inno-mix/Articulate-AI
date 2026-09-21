@@ -1,0 +1,15 @@
+id: spoken-style-standup-01
+scenario_slug: standup-update
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: What's your update?
+- role: user
+  content: Um, so yesterday I, uh, finished the, um, the migration script, and, uh, today I'm gonna, um,
+    start on the, uh, the API endpoint, and, um, no blockers I think, uh, maybe just, um, waiting on the
+    design review.
+expected:
+  conciseness:
+  - 1
+  - 3

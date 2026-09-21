@@ -1,0 +1,23 @@
+id: foreign-language-code-review-01
+scenario_slug: code-review-give-feedback
+mode: text
+learner_level: B1
+transcript:
+- role: assistant
+  content: Hey, thanks for reviewing my PR! Let me know what you think.
+- role: user
+  content: Hi Sam, thanks for the PR. Actually may ayos na naman yung code mo pero may dalawang issue
+    lang -- yung input validation kulang, tapos yung query sa list_users mabagal kasi nasa loop siya.
+    Pakiayos mo na lang bago tayo mag-merge, salamat!
+expected:
+  grammar_vocabulary:
+  - 1
+  - 3
+foreign_words:
+- ayos
+- yung
+- kasi
+- pero
+- mabagal
+- salamat
+- naman

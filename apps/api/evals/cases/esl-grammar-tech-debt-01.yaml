@@ -1,0 +1,19 @@
+id: esl-grammar-tech-debt-01
+scenario_slug: explain-tech-debt-to-pm
+mode: text
+learner_level: B1
+transcript:
+- role: assistant
+  content: How's the feature coming along? Anything I should know about?
+- role: user
+  content: Dana, I want explain about payment module. Is have many old code that we fix quickly before,
+    and now is hard for change safe. Last three bug for payment, is take double time compare other bug.
+    I think we need 20% of next sprint for fix this risk part, especially retry and reconciliation. This
+    way, is more fast and more safe for future.
+expected:
+  grammar_vocabulary:
+  - 1
+  - 2
+  clarity:
+  - 3
+  - 5

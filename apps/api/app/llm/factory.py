@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings
 from app.llm.base import LLMService
 from app.llm.fake import FakeLLMService
-from app.llm.pydantic_ai_service import PydanticAILLMService
+from app.llm.pydantic_ai_service import PydanticAILLMService, thinks_by_default
 from app.models import User
 
 
@@ -29,5 +29,6 @@ async def get_llm_service(user: User, db: AsyncSession, settings: Settings) -> L
             provider="ollama",
             output_mode="native",
             timeout_seconds=settings.llm_timeout_seconds,
+            disable_thinking=thinks_by_default(settings.ollama_model),
         )
     raise NotImplementedError(f"llm_provider={settings.llm_provider!r} is not supported yet")

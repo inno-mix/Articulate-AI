@@ -1,0 +1,17 @@
+id: interview-nostructure-conflict-01
+scenario_slug: behavioral-interview-conflict
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Tell me about a time you disagreed with a teammate.
+- role: user
+  content: Oh yeah so there was this one time, well actually there were a few times, but this one time
+    a teammate and I disagreed about, um, it was about how to structure the database, and I remember I
+    was pretty annoyed, and eventually we talked to our manager, and, oh also there was this other time
+    with a different disagreement but anyway for this one it kind of got resolved I think, we ended up
+    using a mix of both ideas.
+expected:
+  structure:
+  - 1
+  - 2

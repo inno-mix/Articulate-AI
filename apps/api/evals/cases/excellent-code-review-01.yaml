@@ -1,0 +1,39 @@
+id: excellent-code-review-01
+scenario_slug: code-review-give-feedback
+mode: text
+learner_level: C1
+transcript:
+- role: assistant
+  content: Hey, thanks for reviewing my PR! Let me know what you think.
+- role: user
+  content: 'Hi Sam, thanks for the PR. Two things I''d like you to address before merging: the /users
+    endpoint doesn''t validate input before hitting the database, so a malformed request could throw a
+    500 or worse. Also the list_users endpoint runs a query inside a loop, which will get slow past a
+    few hundred rows -- worth switching to pagination. Once those are in, I''m happy to approve.'
+- role: assistant
+  content: Got it, I'll add validation and pagination.
+- role: user
+  content: Sounds good, let me know when it's ready for another look.
+expected:
+  clarity:
+  - 4
+  - 5
+  conciseness:
+  - 4
+  - 5
+  structure:
+  - 4
+  - 5
+  audience_fit:
+  - 4
+  - 5
+  tone:
+  - 4
+  - 5
+  confidence:
+  - 4
+  - 5
+  grammar_vocabulary:
+  - 4
+  - 5
+objective_met: true

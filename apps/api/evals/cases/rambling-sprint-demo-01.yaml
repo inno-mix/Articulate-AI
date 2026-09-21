@@ -1,0 +1,22 @@
+id: rambling-sprint-demo-01
+scenario_slug: sprint-demo
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Ready when you are -- what did the team ship this sprint?
+- role: user
+  content: So, um, ok so basically what happened this sprint is, well first we had a lot of stuff going
+    on, like there was the holiday and then someone was out sick, and then we also had that thing with
+    the staging environment being down for like two days which nobody really expected, so that kind of
+    pushed things back a bit, and then on top of that the design took longer than we thought because there
+    were like three rounds of feedback, and so basically what we ended up shipping was, well, the new
+    onboarding flow, which I guess is the main thing, but there's also some other stuff we did along the
+    way that's not really demo-able yet.
+expected:
+  clarity:
+  - 1
+  - 2
+  conciseness:
+  - 1
+  - 2

@@ -1,0 +1,36 @@
+id: excellent-tech-debt-01
+scenario_slug: explain-tech-debt-to-pm
+mode: text
+learner_level: C1
+transcript:
+- role: assistant
+  content: How's the feature coming along? Anything I should know about?
+- role: user
+  content: 'Dana, the payments module has grown a lot of quick fixes over the last year, and it''s now
+    our slowest area to change safely -- the last three payment bugs took twice as long to fix as similar
+    bugs elsewhere. I''d like to reserve about 20% of next sprint to pay down the riskiest parts: mainly
+    the retry logic and the reconciliation job. That should cut our bug rate there and speed up future
+    payment work. Can we plan for that?'
+expected:
+  clarity:
+  - 4
+  - 5
+  conciseness:
+  - 4
+  - 5
+  structure:
+  - 4
+  - 5
+  audience_fit:
+  - 4
+  - 5
+  tone:
+  - 4
+  - 5
+  confidence:
+  - 4
+  - 5
+  grammar_vocabulary:
+  - 4
+  - 5
+objective_met: true

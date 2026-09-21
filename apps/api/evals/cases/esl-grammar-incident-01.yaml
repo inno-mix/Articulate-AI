@@ -1,0 +1,18 @@
+id: esl-grammar-incident-01
+scenario_slug: incident-status-update
+mode: text
+learner_level: B1
+transcript:
+- role: assistant
+  content: What's the status on the outage?
+- role: user
+  content: Ok update for outage. User is seeing error 500 on checkout since 2:14, is about 30% of traffic.
+    We think is because database connection pool, is full after deploy last night. We are rollback now,
+    maybe 10 minute. I will update again 2:45.
+expected:
+  grammar_vocabulary:
+  - 1
+  - 2
+  clarity:
+  - 3
+  - 5

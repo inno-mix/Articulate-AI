@@ -7,7 +7,7 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from app.llm.base import ChatTurn
 from app.llm.errors import LLMInvalidOutputError, LLMUnavailableError
 from app.llm.outputs import DrillFeedback
-from app.llm.pydantic_ai_service import PydanticAILLMService
+from app.llm.pydantic_ai_service import PydanticAILLMService, thinks_by_default
 
 
 @pytest.fixture(autouse=True)
@@ -147,6 +147,12 @@ async def test_generate_structured_defaults_to_temperature_zero() -> None:
     await service.generate_structured(system="sys", prompt="p", output_type=DrillFeedback)
 
     assert seen["temperature"] == 0.0
+
+
+def test_thinks_by_default_detects_qwen3() -> None:
+    assert thinks_by_default("qwen3:4b") is True
+    assert thinks_by_default("qwen3:8b") is True
+    assert thinks_by_default("llama3.2:latest") is False
 
 
 def test_generation_table_has_every_feature() -> None:

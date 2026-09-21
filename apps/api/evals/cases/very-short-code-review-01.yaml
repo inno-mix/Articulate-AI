@@ -1,0 +1,11 @@
+id: very-short-code-review-01
+scenario_slug: code-review-give-feedback
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: Hey, thanks for reviewing my PR! Let me know what you think.
+- role: user
+  content: Looks fine, ship it.
+expected: {}
+objective_met: false

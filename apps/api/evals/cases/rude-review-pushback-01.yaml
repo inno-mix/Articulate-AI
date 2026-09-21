@@ -1,0 +1,14 @@
+id: rude-review-pushback-01
+scenario_slug: code-review-respond-to-pushback
+mode: text
+learner_level: B2
+transcript:
+- role: assistant
+  content: I left a comment on your PR -- can we talk about the design choice here?
+- role: user
+  content: No, that's wrong. I've been doing this for years and my approach is fine. If you actually read
+    the code properly you'd see it works. I don't have time to keep explaining basic stuff to you.
+expected:
+  tone:
+  - 1
+  - 2

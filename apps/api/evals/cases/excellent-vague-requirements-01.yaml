@@ -1,0 +1,33 @@
+id: excellent-vague-requirements-01
+scenario_slug: clarify-vague-requirements
+mode: text
+learner_level: C1
+transcript:
+- role: assistant
+  content: Can we make the dashboard faster? Users are complaining.
+- role: user
+  content: Aisha, to turn that into something we can build against -- when you say faster, do you mean
+    the initial page load, or how quickly it updates after a filter change? And is there a specific target,
+    like under 2 seconds, or is 'noticeably better than today' enough to start with?
+expected:
+  clarity:
+  - 4
+  - 5
+  conciseness:
+  - 4
+  - 5
+  structure:
+  - 4
+  - 5
+  audience_fit:
+  - 4
+  - 5
+  tone:
+  - 4
+  - 5
+  confidence:
+  - 4
+  - 5
+  grammar_vocabulary:
+  - 4
+  - 5
