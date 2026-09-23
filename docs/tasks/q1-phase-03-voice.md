@@ -519,7 +519,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   first split happens retroactively once the buffer crosses 20 chars, then the 12-char remainder
   "How are you?" never re-crosses 20 chars and comes out via `flush()` instead).
 
-- 2026-09-24 · Task 3.3 · commit &lt;pending&gt; · `make check` ✅ (278 api + 45 web passed; 5
+- 2026-09-24 · Task 3.3 · commit 6d0327a · `make check` ✅ (278 api + 45 web passed; 5
   live tests correctly deselected by default); `make test-live` ✅ (2/2 passed against real
   Deepgram: streaming STT on `tests/fixtures/audio/hello_um.wav` produced a final transcript with
   words, TTS produced non-empty MP3 bytes) · Notes: **deviated from the planned interface** for
