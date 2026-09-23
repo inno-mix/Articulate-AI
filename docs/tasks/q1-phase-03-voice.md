@@ -95,7 +95,7 @@ not production code.
 - [x] 3.1.5 Update `voice-and-pronunciation.md` §2.5/§6/§7, `local-development.md`
   (`DEEPGRAM_STT_MODEL` default), `.env.example`, and `product-spec.md` F12/§9 (state whether the
   speaking-speed setting will exist). Tell the owner the result.
-- [ ] 3.1.6 Commit: `docs: record deepgram stt model decision (adr-0013)` (spike scripts may be
+- [x] 3.1.6 Commit: `docs: record deepgram stt model decision (adr-0013)` (spike scripts may be
   committed under `spikes/` for reference; audio files are not).
 
 **Acceptance criteria:**
@@ -468,3 +468,27 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
 ## Completion log
 
 <!-- Append: - YYYY-MM-DD · Task N.M · commits · evidence · Notes · Follow-ups -->
+
+- 2026-09-23 · Task 3.1 · commit 8dbec79 · ADR-0013 written with measured evidence for all seven
+  questions (real Deepgram calls against two owner-recorded clips); `make check` ✅ (214 api + 45
+  web passed) · Notes: Nova-3 ships (Flux has no filler-word feature and never reached `EndOfTurn`
+  within 3.3s on either clip). `deepgram-sdk` 5.3.4 added as a dependency (needed to run the spike
+  itself, one task earlier than Task 3.3's file map implies). Found three real SDK-vs-docs gaps by
+  reading the installed source, not by guessing: (1) `listen.v1/v2.connect()` have no
+  `filler_words` kwarg and silently ignore `request_options["additional_query_parameters"]` for
+  WS connects — getting `filler_words=true` onto the wire needs a hand-built `websockets.connect()`
+  (proven working, transcript showed "um"/"uh"); (2) the documented `send_finalize()` /
+  `send_close_stream()` / `send_flush()` / `send_close()` convenience methods don't exist — the
+  real API is `send_control(<Type>ControlMessage(type=...))` with message types imported from
+  `deepgram.extensions.types.sockets`, not the documented `deepgram.listen.v1.types`; (3)
+  `connection.start_listening()` blocks until close and must run via `asyncio.create_task(...)`,
+  not be awaited inline — awaiting it inline stalls audio sending until Deepgram's ~10-13s
+  inactivity timeout (`net0001`) closes the socket. All three are recorded in ADR-0013's
+  "Implications for Task 3.3" so the production adapter doesn't rediscover them. Push-to-talk
+  finalize latency measured at 0.36s vs. ~3.3s for natural endpointing — matches the architecture's
+  plan to call `Finalize` on `ptt_up`. TTS: all six curated Aura-2 voices confirmed to exist,
+  ~0.36-0.38s first-byte latency; `speed` works via REST only (confirmed by byte-length scaling
+  0.7x/1.0x/1.5x), not on the live `speak.v1` WebSocket — the planned AI-speaking-speed setting
+  (F12) is dropped, documented in `product-spec.md` and `voice-and-pronunciation.md` §7.
+  Follow-ups: re-check for a `deepgram-sdk` patch release before Task 3.3 in case any of the three
+  gaps are fixed upstream.
