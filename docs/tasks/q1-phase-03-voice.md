@@ -615,7 +615,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   `SkillScore.rubric_version` were already nullable/present from Phase 2), so `make gen-client`
   produced no diff. Follow-ups: none.
 
-- 2026-09-24 · Task 3.6 · commit &lt;pending&gt; · `make check` ✅ (316 api + 62 web passed, 17 new
+- 2026-09-24 · Task 3.6 · commit 0b18d93 · `make check` ✅ (316 api + 62 web passed, 17 new
   audio-lib unit tests) · Notes: only `pcm.ts` (pure) and `voice-socket.ts` got dedicated unit
   tests per the task's own file map — `mic-capture.ts` and `pcm-player.ts` wrap
   `getUserMedia`/`AudioContext`/`AudioWorkletNode`, which jsdom doesn't implement meaningfully, so
