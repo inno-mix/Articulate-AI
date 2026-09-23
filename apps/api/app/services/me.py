@@ -13,7 +13,9 @@ from app.schemas.me import (
     SettingsOut,
     SettingsUpdate,
     UserOut,
+    VoiceOut,
 )
+from app.voice.voices import VOICES
 
 
 async def get_me(db: AsyncSession, user_id: UUID) -> MeOut:
@@ -63,3 +65,7 @@ async def update_settings(db: AsyncSession, user_id: UUID, data: SettingsUpdate)
     await db.flush()
     await db.refresh(user_settings)
     return SettingsOut.model_validate(user_settings)
+
+
+def list_voices() -> list[VoiceOut]:
+    return [VoiceOut(id=voice.id, label=voice.label) for voice in VOICES]

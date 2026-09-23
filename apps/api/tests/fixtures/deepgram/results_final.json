@@ -1,0 +1,21 @@
+{
+  "type": "Results",
+  "channel_index": [0, 1],
+  "duration": 1.2,
+  "start": 0.0,
+  "is_final": true,
+  "speech_final": true,
+  "channel": {
+    "alternatives": [
+      {
+        "transcript": "hello um there",
+        "confidence": 0.91,
+        "words": [
+          { "word": "hello", "start": 0.0, "end": 0.4, "confidence": 0.98, "punctuated_word": "Hello" },
+          { "word": "um", "start": 0.5, "end": 0.7, "confidence": 0.9, "punctuated_word": "um" },
+          { "word": "there", "start": 0.8, "end": 1.2, "confidence": 0.55, "punctuated_word": "there" }
+        ]
+      }
+    ]
+  }
+}

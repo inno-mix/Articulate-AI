@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.deps import CurrentUser, DbDep
-from app.schemas.me import MeOut, ProfileOut, ProfileUpdate, SettingsOut, SettingsUpdate
+from app.schemas.me import MeOut, ProfileOut, ProfileUpdate, SettingsOut, SettingsUpdate, VoiceOut
 from app.services import me as me_service
 
 router = APIRouter(tags=["me"])
@@ -25,3 +25,8 @@ async def get_my_settings(user: CurrentUser, db: DbDep) -> SettingsOut:
 @router.patch("/settings")
 async def update_my_settings(body: SettingsUpdate, user: CurrentUser, db: DbDep) -> SettingsOut:
     return await me_service.update_settings(db, user.id, body)
+
+
+@router.get("/voices")
+async def get_voices(user: CurrentUser) -> list[VoiceOut]:
+    return me_service.list_voices()

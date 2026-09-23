@@ -1305,6 +1305,24 @@
         ],
         "title": "VoiceMetrics",
         "type": "object"
+      },
+      "VoiceOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "VoiceOut",
+        "type": "object"
       }
     }
   },
@@ -2012,6 +2030,82 @@
           }
         },
         "summary": "Update My Settings",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/tts/preview": {
+      "get": {
+        "operationId": "get_tts_preview",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "voice",
+            "required": true,
+            "schema": {
+              "title": "Voice",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "text",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Text",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Tts Preview",
+        "tags": [
+          "tts"
+        ]
+      }
+    },
+    "/api/v1/voices": {
+      "get": {
+        "operationId": "get_voices",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VoiceOut"
+                  },
+                  "title": "Response Get Voices",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Voices",
         "tags": [
           "me"
         ]

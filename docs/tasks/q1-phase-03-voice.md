@@ -159,11 +159,18 @@ Add dependency: `uv add deepgram-sdk` (pin the major version 5). Tests listed in
 **Interfaces (produces):** Protocols exactly as `voice-and-pronunciation.md` §2.6, plus:
 ```python
 # app/voice/deepgram_stt.py
+# DEVIATION FROM THE ORIGINAL PLAN (recorded here per agent-workflow.md's "spikes may change
+# later subtasks" rule): ADR-0013 found that deepgram-sdk 5.3.4's typed listen.v1.connect() has
+# no `filler_words` kwarg and silently drops request_options["additional_query_parameters"] for
+# WS connects — using it as originally planned would make the live adapter strip every "um"/"uh"
+# server-side, silently breaking Task 3.2's whole filler-rate feature. DeepgramSpeechToText opens
+# a raw `websockets` connection with a hand-built query string instead (the workaround ADR-0013
+# proved works), using AsyncDeepgramClient only where the SDK still has no gap (TTS).
 class DeepgramSpeechToText:            # implements SpeechToText
-    def __init__(self, api_key: str, model: str, *, client_factory: Callable[[], AsyncDeepgramClient] | None = None): ...
-# app/voice/deepgram_tts.py
+    def __init__(self, api_key: str, model: str, *, connector: WebsocketConnector | None = None): ...
+# app/voice/deepgram_tts.py  (no SDK gap here — speak.v1.connect() and audio.generate() both work)
 class DeepgramTextToSpeech:            # implements TextToSpeech
-    def __init__(self, api_key: str, *, client_factory=None, http: httpx.AsyncClient | None = None): ...
+    def __init__(self, api_key: str, *, client_factory=None): ...
 # app/voice/deepgram_common.py
 def deepgram_request_options() -> dict[str, Any]     # {"mip_opt_out": True} (+ shared options found in the spike)
 # app/voice/voices.py
@@ -184,28 +191,29 @@ Fake behaviour (documented for tests and `make dev-fake`):
 - `FakeTextToSpeech`: 2 400 zero bytes per sentence; `synthesize_mp3` returns a constant tiny MP3
   byte string stored in `app/voice/fake_assets.py`.
 
-Adapter seams: wrap SDK connection objects behind the `client_factory` so unit tests inject a fake
-connection that replays recorded event objects (use real event payload shapes captured in the
-spike, saved as JSON fixtures under `tests/fixtures/deepgram/`).
+Adapter seams: TTS wraps SDK connection objects behind `client_factory` so unit tests inject a fake
+client/connection. STT's `connector` plays the same role for the raw websocket (tests inject a
+fake connector that replays recorded event dicts as JSON text frames) — both use real event
+payload shapes captured in the spike, saved as JSON fixtures under `tests/fixtures/deepgram/`.
 
 **Subtasks:**
-- [ ] 3.3.1 Failing unit tests `test_deepgram_stt.py`: maps interim results → `interim`; final
+- [x] 3.3.1 Failing unit tests `test_deepgram_stt.py`: maps interim results → `interim`; final
   results → `final` with `SpeechWord`s (filler flags set); end-of-turn signal (per ADR-0013) →
   `end_of_turn`; `finalize()` calls the SDK finalize; connection errors → `SpeechUnavailableError`;
   `keyterm` passed (≤ 20); `test_connection_opts_out_of_model_improvement` (`mip_opt_out` is true
   on every connection).
-- [ ] 3.3.2 Failing unit tests `test_deepgram_tts.py`: sends each sentence as it arrives and exactly
+- [x] 3.3.2 Failing unit tests `test_deepgram_tts.py`: sends each sentence as it arrives and exactly
   one flush per turn (after the last sentence); yields audio
   bytes in order; stops after the flushed event; REST MP3 uses `respx` mock; HTTP 5xx →
   `SpeechUnavailableError`; both the WebSocket connection and the REST request carry
   `mip_opt_out=true`.
-- [ ] 3.3.3 Failing integration tests: `test_voices.py` (`GET /voices` returns 6 voices);
+- [x] 3.3.3 Failing integration tests: `test_voices.py` (`GET /voices` returns 6 voices);
   `test_tts_preview.py` (fake returns `audio/mpeg`; unknown voice → 422; empty text or > 200 chars → 422);
   extend `test_me.py` (`PATCH /settings` with unknown `tts_voice` → 422).
-- [ ] 3.3.4 Run → FAIL. Implement. Run → PASS. `make gen-client`.
-- [ ] 3.3.5 Live test `tests/live/test_deepgram_live.py`: stream `hello_um.wav` → at least one
+- [x] 3.3.4 Run → FAIL. Implement. Run → PASS. `make gen-client`.
+- [x] 3.3.5 Live test `tests/live/test_deepgram_live.py`: stream `hello_um.wav` → at least one
   final with words; TTS one sentence → > 0 bytes. Run `make test-live` (tell the owner first).
-- [ ] 3.3.6 Commit: `feat(api): add deepgram speech adapters, voices and tts preview`
+- [x] 3.3.6 Commit: `feat(api): add deepgram speech adapters, voices and tts preview`
 
 ---
 
@@ -493,7 +501,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   Follow-ups: re-check for a `deepgram-sdk` patch release before Task 3.3 in case any of the three
   gaps are fixed upstream.
 
-- 2026-09-23 · Task 3.2 · commit &lt;pending&gt; · `make check` ✅ (249 api + 45 web passed, 35 new
+- 2026-09-23 · Task 3.2 · commit 87c8d65 · `make check` ✅ (249 api + 45 web passed, 35 new
   voice unit tests) · Notes: added `SpeechWord`/`SpeechData` to `app/schemas/json_types.py`
   (binding shapes from `data-model.md`, not yet created by an earlier task but required by
   `compute_voice_metrics`'s signature). `fillers.py`: `is_filler` strips ASCII punctuation and
@@ -510,3 +518,31 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   is what makes "Hello there. How are you?" resolve to two chunks when streamed char-by-char (the
   first split happens retroactively once the buffer crosses 20 chars, then the 12-char remainder
   "How are you?" never re-crosses 20 chars and comes out via `flush()` instead).
+
+- 2026-09-24 · Task 3.3 · commit &lt;pending&gt; · `make check` ✅ (278 api + 45 web passed; 5
+  live tests correctly deselected by default); `make test-live` ✅ (2/2 passed against real
+  Deepgram: streaming STT on `tests/fixtures/audio/hello_um.wav` produced a final transcript with
+  words, TTS produced non-empty MP3 bytes) · Notes: **deviated from the planned interface** for
+  `DeepgramSpeechToText` — updated Task 3.3's own "Interfaces" block above before writing code
+  (agent-workflow.md's "spikes may change later subtasks" rule): it now takes a `connector`
+  (raw-websocket seam) instead of `client_factory: Callable[[], AsyncDeepgramClient]`, because
+  ADR-0013 showed the typed SDK client can't carry `filler_words` for streaming — using it as
+  originally planned would have silently broken Task 3.2's whole filler-rate feature in
+  production. `DeepgramTextToSpeech` keeps the originally planned `client_factory` design (ADR-0013
+  found no SDK gap there). Added `SpeechWord`-per-message parsing: a Nova-3 message can carry a
+  final transcript *and* `speech_final=true` at once, so `_parse_message` can emit both a `final`
+  and an `end_of_turn` `TranscriptEvent` from a single wire message — confirmed against the real
+  event shapes from the Task 3.1 spike output, now also captured as JSON fixtures under
+  `tests/fixtures/deepgram/`. Added `websockets` as an explicit dependency (already resolved
+  transitively via `deepgram-sdk`, just not previously pinned directly). Live-test fixture:
+  copied the owner's real `spikes/deepgram/audio/clip-a.wav` recording to
+  `tests/fixtures/audio/hello_um.wav` — owner explicitly chose the real recording over a
+  synthetic TTS fixture when asked (synthetic audio has no real fillers per the architecture doc,
+  so it would exercise the pipeline less realistically). `GET /voices` and `GET /tts/preview`
+  match `api-contract.md` §2 exactly; `SettingsUpdate.tts_voice` now validates against
+  `is_known_voice()` (422 on unknown, matching the existing `_valid_timezone` validator pattern).
+  `FakeTextToSpeech.synthesize_mp3` returns a real ~480-byte MP3 (silence) generated once via
+  `ffmpeg`/`libmp3lame` and embedded as base64 in `app/voice/fake_assets.py`, not empty bytes, so
+  a browser or test asserting on content-type/playability doesn't get a decode error.
+  Follow-ups: none — `deepgram-sdk` still at 5.3.4 (latest 5.x on PyPI as of this check), so the
+  raw-websocket workaround stays necessary.

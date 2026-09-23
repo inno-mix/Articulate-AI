@@ -7,6 +7,7 @@ from pydantic import Field, field_validator, model_validator
 from app.domain.dimensions import Dimension
 from app.domain.enums import EnglishLevel, Goal, PracticeMode, Seniority, VoiceInputMode
 from app.schemas.common import RequestModel, ResponseModel
+from app.voice.voices import is_known_voice
 
 NULLABLE_PROFILE_FIELDS = frozenset({"native_language"})
 
@@ -73,12 +74,24 @@ class SettingsUpdate(RequestModel):
     voice_input_mode: VoiceInputMode | None = None
     tts_voice: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 
+    @field_validator("tts_voice")
+    @classmethod
+    def _known_voice(cls, value: str | None) -> str | None:
+        if value is not None and not is_known_voice(value):
+            raise ValueError("Unknown voice")
+        return value
+
     @model_validator(mode="after")
     def _no_nulls(self) -> Self:
         for name in self.model_fields_set:
             if getattr(self, name) is None:
                 raise ValueError(f"{name} can't be null")
         return self
+
+
+class VoiceOut(ResponseModel):
+    id: str
+    label: str
 
 
 class MeOut(ResponseModel):

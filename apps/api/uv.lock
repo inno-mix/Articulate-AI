@@ -214,6 +214,7 @@ dependencies = [
     { name = "taskiq-fastapi" },
     { name = "taskiq-redis" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -246,6 +247,7 @@ requires-dist = [
     { name = "taskiq-fastapi", specifier = ">=0.5.0" },
     { name = "taskiq-redis", specifier = ">=1.2.3" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.53.0" },
+    { name = "websockets", specifier = ">=16,<17" },
 ]
 
 [package.metadata.requires-dev]

@@ -129,3 +129,21 @@ async def test_patch_settings_rejects_empty_voice(
     response = await client.patch("/api/v1/settings", json={"tts_voice": ""})
 
     assert response.status_code == 422
+
+
+async def test_patch_settings_rejects_unknown_voice(
+    client: httpx.AsyncClient, local_user: User
+) -> None:
+    response = await client.patch("/api/v1/settings", json={"tts_voice": "not-a-real-voice"})
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+async def test_patch_settings_accepts_known_voice(
+    client: httpx.AsyncClient, local_user: User
+) -> None:
+    response = await client.patch("/api/v1/settings", json={"tts_voice": "aura-2-apollo-en"})
+
+    assert response.status_code == 200
+    assert response.json()["tts_voice"] == "aura-2-apollo-en"

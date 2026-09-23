@@ -21,6 +21,7 @@ dependencies = [
     "taskiq-fastapi>=0.5.0",
     "taskiq-redis>=1.2.3",
     "uvicorn[standard]>=0.53.0",
+    "websockets>=16,<17",
 ]
 
 [dependency-groups]

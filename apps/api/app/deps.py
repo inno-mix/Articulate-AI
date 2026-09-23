@@ -10,12 +10,16 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings
 from app.core.db import SessionFactory, get_db
-from app.core.errors import LocalUserMissingError, UnauthorizedError
+from app.core.errors import LocalUserMissingError, SpeechUnavailableError, UnauthorizedError
 from app.core.redis import get_redis
 from app.domain.constants import LOCAL_USER_ID
 from app.llm.base import LLMService
 from app.llm.factory import get_llm_service
 from app.models import User
+from app.voice.base import SpeechToText, TextToSpeech
+from app.voice.deepgram_stt import DeepgramSpeechToText
+from app.voice.deepgram_tts import DeepgramTextToSpeech
+from app.voice.fake import FakeSpeechToText, FakeTextToSpeech
 
 
 def get_app_settings(request: Request) -> Settings:
@@ -62,3 +66,27 @@ def get_session_factory(request: Request) -> SessionFactory:
 
 
 SessionFactoryDep = Annotated[SessionFactory, Depends(get_session_factory)]
+
+
+def get_stt(settings: SettingsDep) -> SpeechToText:
+    """Created lazily: a missing key never blocks startup, only the first voice request."""
+    if settings.stt_provider == "fake":
+        return FakeSpeechToText()
+    if settings.deepgram_api_key is None:
+        raise SpeechUnavailableError("Deepgram API key is not configured.")
+    return DeepgramSpeechToText(
+        settings.deepgram_api_key.get_secret_value(), settings.deepgram_stt_model
+    )
+
+
+def get_tts(settings: SettingsDep) -> TextToSpeech:
+    """Created lazily: a missing key never blocks startup, only the first voice request."""
+    if settings.tts_provider == "fake":
+        return FakeTextToSpeech()
+    if settings.deepgram_api_key is None:
+        raise SpeechUnavailableError("Deepgram API key is not configured.")
+    return DeepgramTextToSpeech(settings.deepgram_api_key.get_secret_value())
+
+
+STTDep = Annotated[SpeechToText, Depends(get_stt)]
+TTSDep = Annotated[TextToSpeech, Depends(get_tts)]

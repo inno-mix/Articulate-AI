@@ -1,0 +1,13 @@
+{
+  "type": "Results",
+  "channel_index": [0, 1],
+  "duration": 0.0,
+  "start": 1.2,
+  "is_final": true,
+  "speech_final": true,
+  "channel": {
+    "alternatives": [
+      { "transcript": "", "confidence": 0.0, "words": [] }
+    ]
+  }
+}

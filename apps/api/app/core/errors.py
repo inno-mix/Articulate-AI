@@ -56,6 +56,12 @@ class ServiceUnavailableError(AppError):
     message = "A required service is unavailable. Please try again."
 
 
+class SpeechUnavailableError(AppError):
+    status_code = 503
+    code = "speech_unavailable"
+    message = "The speech service is unavailable right now. Please try again."
+
+
 class UnauthorizedError(AppError):
     status_code = 401
     code = "unauthorized"
