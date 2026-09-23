@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "dev", "runtimeExecutable": "make", "runtimeArgs": ["dev"], "port": 3000 },
-    { "name": "dev-fake", "runtimeExecutable": "make", "runtimeArgs": ["dev-fake"], "port": 3000 }
+    { "name": "dev-fake", "runtimeExecutable": "make", "runtimeArgs": ["dev-fake"], "port": 3000 },
+    {
+      "name": "dev-api-worker",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:api-worker"],
+      "port": 8000
+    }
   ]
 }

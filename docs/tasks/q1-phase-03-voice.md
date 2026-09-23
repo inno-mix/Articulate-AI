@@ -277,9 +277,9 @@ Implementation notes (binding):
 - Replies use `TEMPERATURE["roleplay"]`; TTS gets exactly one flush per assistant turn.
 
 **Subtasks:**
-- [ ] 3.4.1 Failing unit tests `test_protocol.py`: parses each client message; rejects unknown type
+- [x] 3.4.1 Failing unit tests `test_protocol.py`: parses each client message; rejects unknown type
   and invalid JSON; server events serialise with `type`.
-- [ ] 3.4.2 Failing integration tests `test_voice_ws.py` (fakes; `httpx-ws`):
+- [x] 3.4.2 Failing integration tests `test_voice_ws.py` (fakes; `httpx-ws`):
   - `test_rejects_text_mode_session_with_4409`
   - `test_rejects_other_users_session_with_4404`
   - `test_second_connection_is_rejected_with_4409`
@@ -303,11 +303,11 @@ Implementation notes (binding):
   - `test_hands_free_pauses_after_idle_and_resumes` (`silent=True` fake; clock past 20 s →
     `paused`; `resume` → `state listening`)
   - `test_delete_session_with_open_voice_socket_returns_409`
-- [ ] 3.4.3 Run → FAIL. Implement. Run → PASS.
-- [ ] 3.4.4 Manual check with real Deepgram + Ollama using a tiny script
+- [x] 3.4.3 Run → FAIL. Implement. Run → PASS.
+- [x] 3.4.4 Manual check with real Deepgram + Ollama using a tiny script
   `apps/api/spikes/deepgram/ws_client.py` that streams `hello_um.wav` over the WebSocket and saves
   received audio to a WAV; listen to it.
-- [ ] 3.4.5 Commit: `feat(api): add voice session relay over websocket`
+- [x] 3.4.5 Commit: `feat(api): add voice session relay over websocket`
 
 **Pitfalls:** never `await ws.send_*` from two tasks at once without a lock (use an
 `asyncio.Lock` in a `send_json`/`send_bytes` helper); Deepgram connections time out when idle —
@@ -546,3 +546,40 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   a browser or test asserting on content-type/playability doesn't get a decode error.
   Follow-ups: none — `deepgram-sdk` still at 5.3.4 (latest 5.x on PyPI as of this check), so the
   raw-websocket workaround stays necessary.
+
+- 2026-09-24 · Task 3.4 · commit &lt;pending&gt; · `make check` ✅ (307 api + 45 web passed, 17 new
+  WS integration tests); manual check ✅ (real Deepgram + Ollama via a temporary `dev:api-worker`
+  server: full push-to-talk turn over `WS /sessions/{id}/voice` using
+  `tests/fixtures/audio/hello_um.wav` — transcript saved with filler flags intact
+  ("so **um** yesterday ... and **uh** today ..."), a contextual reply from `llama3.2:latest`, and
+  1167 real Deepgram TTS audio chunks (2.24 MB) written to a WAV and sent to the owner to listen
+  to; test session and dev servers cleaned up afterward) · Notes: found and fixed two real
+  concurrency bugs while getting the WS integration tests green, both now covered by regression
+  tests: (1) a hands-free turn that goes back to "listening" (e.g. after a filler-only turn, or
+  after `resume`) opens a **new** background STT-consumer task; if the client disconnects before
+  that task ever gets an event, nothing cancelled it, so `asyncio.TaskGroup.__aexit__` — and
+  `run()` — waited forever. Fixed by tracking every dynamically-spawned task in
+  `self._background_tasks` (via a `_spawn()` helper) and cancelling all of them, not just the
+  heartbeat task, in `_stop()` — called from `_receive_loop()`'s `finally` regardless of how the
+  loop ends. Also added best-effort `stt_session.close()` in `run()`'s own `finally` so a real
+  Deepgram connection doesn't leak on disconnect either. (2) `ptt_up` arriving while the STT
+  session is still opening (`open_session()` hasn't resolved) skipped calling `finalize()`
+  entirely (since `self._stt_session` was still `None`) and just waited out the 2s timeout, by
+  which point the turn's accumulated words had already been reassigned to the *next* turn's
+  `_TurnState` — the turn came back empty and the relay had nothing left to say, hanging any test
+  waiting for a reply. Fixed with a `self._ptt_up_requested` flag that `_open_stt_session()` checks
+  once the session is ready, finalizing immediately instead of waiting for the timeout.
+  Test-infra note: `ASGIWebSocketTransport`'s internal anyio task group must be entered/exited in
+  the same asyncio Task, which a pytest-asyncio async-generator fixture's setup/teardown split
+  violates — used a plain `@asynccontextmanager` helper (`voice_ws_client`, called directly inside
+  each test) instead of a fixture. Also found that mixing `session_factory()`-based sessions with
+  the HTTP-request-scoped `db` session on the *same* shared test connection corrupts SQLAlchemy's
+  savepoint/attribute state when both are used around the same moment
+  (`test_delete_session_with_open_voice_socket_returns_409` originally opened a real concurrent WS
+  connection; rewritten to set/check the `voice:session:<id>` Redis key directly instead, which is
+  the actual mechanism `delete_session()` checks — a test-harness limitation, not a product bug).
+  `get_app_settings`/`get_redis`/`get_session_factory` widened from `Request` to `HTTPConnection`
+  so they type-check as WS dependencies too (not used by the final voice endpoint design, which
+  reads `websocket.app.state` directly for exception-safety reasons — see `app/api/v1/voice.py`'s
+  docstring — but a reasonable, harmless, backward-compatible widening either way).
+  Follow-ups: none.

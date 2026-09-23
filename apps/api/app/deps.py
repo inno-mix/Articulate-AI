@@ -2,7 +2,8 @@
 
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends
+from fastapi.requests import HTTPConnection
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,9 +23,13 @@ from app.voice.deepgram_tts import DeepgramTextToSpeech
 from app.voice.fake import FakeSpeechToText, FakeTextToSpeech
 
 
-def get_app_settings(request: Request) -> Settings:
-    """Settings of the running app (tests can swap them via app.state.settings)."""
-    settings: Settings = request.app.state.settings
+def get_app_settings(conn: HTTPConnection) -> Settings:
+    """Settings of the running app (tests can swap them via app.state.settings).
+
+    Takes `HTTPConnection` (the common base of `Request`/`WebSocket`) so this also works as a
+    dependency for WebSocket routes (voice-and-pronunciation.md §2).
+    """
+    settings: Settings = conn.app.state.settings
     return settings
 
 
@@ -56,12 +61,12 @@ LLMDep = Annotated[LLMService, Depends(get_llm)]
 RedisDep = Annotated[Redis, Depends(get_redis)]
 
 
-def get_session_factory(request: Request) -> SessionFactory:
-    """The app's own session factory. Used by the SSE generator, which opens its own DB
-    sessions rather than holding the request-scoped one open across the stream
-    (see `app/services/chat.py`).
+def get_session_factory(conn: HTTPConnection) -> SessionFactory:
+    """The app's own session factory. Used by the SSE generator and the voice relay, which open
+    their own DB sessions rather than holding the request-scoped one open across a stream
+    (see `app/services/chat.py`, `app/voice/relay.py`).
     """
-    factory: SessionFactory = request.app.state.session_factory
+    factory: SessionFactory = conn.app.state.session_factory
     return factory
 
 

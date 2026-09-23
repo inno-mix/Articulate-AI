@@ -8,11 +8,12 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
+from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.errors import NotFoundError
+from app.core.errors import NotFoundError, SessionInUseError
 from app.domain.enums import (
     MessageRole,
     MessageSource,
@@ -35,6 +36,7 @@ from app.schemas.session import (
 )
 from app.services import scenarios as scenarios_service
 from app.services.feedback import create_pending_report
+from app.services.locks import voice_session_lock_key
 from app.services.pagination import MAX_LIMIT, decode_cursor, encode_cursor
 from app.worker.tasks.feedback import enqueue_report
 
@@ -234,7 +236,9 @@ async def end_session(db: AsyncSession, user_id: UUID, session_id: UUID) -> EndS
     return EndSessionOut(status=session.status, report_status=report_status)
 
 
-async def delete_session(db: AsyncSession, user_id: UUID, session_id: UUID) -> None:
+async def delete_session(db: AsyncSession, redis: Redis, user_id: UUID, session_id: UUID) -> None:
     session = await get_owned_session(db, user_id, session_id)
+    if await redis.exists(voice_session_lock_key(session_id)):
+        raise SessionInUseError()
     await db.delete(session)
     await db.flush()

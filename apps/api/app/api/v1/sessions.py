@@ -89,5 +89,5 @@ async def end_session(session_id: UUID, user: CurrentUser, db: DbDep) -> EndSess
 
 
 @router.delete("/sessions/{session_id}", status_code=204)
-async def delete_session(session_id: UUID, user: CurrentUser, db: DbDep) -> None:
-    await sessions_service.delete_session(db, user.id, session_id)
+async def delete_session(session_id: UUID, user: CurrentUser, db: DbDep, redis: RedisDep) -> None:
+    await sessions_service.delete_session(db, redis, user.id, session_id)

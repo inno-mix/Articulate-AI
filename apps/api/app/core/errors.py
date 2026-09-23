@@ -106,6 +106,12 @@ class ReportNotReadyError(AppError):
     message = "This report can't be retried right now."
 
 
+class SessionInUseError(AppError):
+    status_code = 409
+    code = "session_in_use"
+    message = "A voice connection for this session is still open."
+
+
 # The five codes below mirror `app/llm/errors.py`'s LLMError subclasses (api-contract.md's error
 # table) — the "AppError" suffix keeps them distinct where both are imported together, e.g. in
 # app/services/chat.py's LLMError -> AppError mapping.

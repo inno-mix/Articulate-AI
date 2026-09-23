@@ -13,6 +13,11 @@ def lock_key(session_id: UUID) -> str:
     return f"session-reply-lock:{session_id}"
 
 
+def voice_session_lock_key(session_id: UUID) -> str:
+    """One active voice WebSocket per session (voice-and-pronunciation.md §2.1)."""
+    return f"voice:session:{session_id}"
+
+
 @asynccontextmanager
 async def session_reply_lock(
     redis: Redis, session_id: UUID, ttl_s: int = 120

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import health, me, reports, scenarios, sessions, tts
+from app.api.v1 import health, me, reports, scenarios, sessions, tts, voice
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health.router)
@@ -9,3 +9,4 @@ api_router.include_router(scenarios.router)
 api_router.include_router(sessions.router)
 api_router.include_router(reports.router)
 api_router.include_router(tts.router)
+api_router.include_router(voice.router)
