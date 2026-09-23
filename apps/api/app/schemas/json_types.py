@@ -48,6 +48,28 @@ class GrammarFix(BaseModel):
     explanation: str
 
 
+class SpeechWord(BaseModel):
+    """One transcribed word with timing (`messages.speech` / `response_speech`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    word: str
+    start: float
+    end: float
+    confidence: float
+    is_filler: bool
+
+
+class SpeechData(BaseModel):
+    """A voice turn's transcript with word timings (`messages.speech` / `response_speech`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    words: list[SpeechWord]
+    duration_s: float
+    stt_model: str
+
+
 class VoiceMetrics(BaseModel):
     """Speaking stats computed from a voice session (`feedback_reports.voice_metrics`)."""
 

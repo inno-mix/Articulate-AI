@@ -128,20 +128,20 @@ class SentenceSplitter:
 ```
 
 **Subtasks:**
-- [ ] 3.2.1 Failing parametrised tests for metrics: no turns → all counts 0, `wpm=0`,
+- [x] 3.2.1 Failing parametrised tests for metrics: no turns → all counts 0, `wpm=0`,
   `fluency_score=1` (no speech can't be fluent; say so in the docstring); normal pace 140 wpm, no
   fillers → 5; 100 wpm → 4; 80 wpm → 3; filler rate 4 → −1; 7 → −2; long pauses 3/min → −1;
   combined penalties clamp at 1; turns with < 3 non-filler words excluded from pace; only short
   turns → `pace_measured=false`, `wpm=0` and **no** pace penalty; hard-to-catch words
   distinct, lower-cased, ≤ 10, fillers excluded; `filler_examples` ≤ 5 distinct.
-- [ ] 3.2.2 Failing tests for fillers: "um", "Uh," (punctuation stripped), "like" is **not** a
+- [x] 3.2.2 Failing tests for fillers: "um", "Uh," (punctuation stripped), "like" is **not** a
   filler, provider flag overrides.
-- [ ] 3.2.3 Failing tests for the splitter: splits "Hello there. How are you?" into two chunks
+- [x] 3.2.3 Failing tests for the splitter: splits "Hello there. How are you?" into two chunks
   when streamed char by char; doesn't split "e.g. this" or "v2.1 is out" mid-token (require
   whitespace after the terminator and ≥ 20 chars); long run-on text is split at a comma/space after
   200 chars; flush returns the tail; no empty chunks.
-- [ ] 3.2.4 Run → FAIL. Implement. Run → PASS.
-- [ ] 3.2.5 Commit: `feat(api): add speaking stats, filler detection and sentence splitter`
+- [x] 3.2.4 Run → FAIL. Implement. Run → PASS.
+- [x] 3.2.5 Commit: `feat(api): add speaking stats, filler detection and sentence splitter`
 
 ---
 
@@ -492,3 +492,21 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   (F12) is dropped, documented in `product-spec.md` and `voice-and-pronunciation.md` §7.
   Follow-ups: re-check for a `deepgram-sdk` patch release before Task 3.3 in case any of the three
   gaps are fixed upstream.
+
+- 2026-09-23 · Task 3.2 · commit &lt;pending&gt; · `make check` ✅ (249 api + 45 web passed, 35 new
+  voice unit tests) · Notes: added `SpeechWord`/`SpeechData` to `app/schemas/json_types.py`
+  (binding shapes from `data-model.md`, not yet created by an earlier task but required by
+  `compute_voice_metrics`'s signature). `fillers.py`: `is_filler` strips ASCII punctuation and
+  lower-cases before matching `FILLER_TOKENS`; provider flag wins when not `None`. `metrics.py`:
+  pace (`wpm`) is computed only from turns with ≥3 non-filler words, using *those turns'* own
+  summed word count and duration (not diluted by short turns' duration) — an explicit reading of
+  the "Initial heuristic" note, since the spec doesn't pin down whether short turns' duration
+  should count toward the denominator. `hard_to_catch_words`/`filler_examples` cap by keeping the
+  first N distinct values in encounter order. `fluency_score` forces 1 whenever zero words (filler
+  or not) were spoken at all, overriding the additive formula (which would otherwise leave a
+  no-turns/no-speech case at the default 5). `sentences.py`: the ≥20-char gate applies to the
+  *whole current buffer*, not the candidate sentence itself — once the buffer reaches 20 chars, it
+  splits at the *earliest* sentence-end found within it (which can be well before char 20); this
+  is what makes "Hello there. How are you?" resolve to two chunks when streamed char-by-char (the
+  first split happens retroactively once the buffer crosses 20 chars, then the 12-char remainder
+  "How are you?" never re-crosses 20 chars and comes out via `flush()` instead).
