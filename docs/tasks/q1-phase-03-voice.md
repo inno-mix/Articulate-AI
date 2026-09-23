@@ -378,15 +378,15 @@ export class VoiceSocket {
 ```
 
 **Subtasks:**
-- [ ] 3.6.1 Failing tests `pcm.test.ts`: downsample 48k→16k length and averaging; identity when
+- [x] 3.6.1 Failing tests `pcm.test.ts`: downsample 48k→16k length and averaging; identity when
   rates equal; `floatToInt16` clamps and scales (1.0 → 32767, −1.0 → −32768); chunker emits exact
   1600-sample chunks across uneven pushes and flushes the remainder.
-- [ ] 3.6.2 Failing tests `voice-socket.test.ts` (mock WebSocket class): JSON events parsed and
+- [x] 3.6.2 Failing tests `voice-socket.test.ts` (mock WebSocket class): JSON events parsed and
   typed; binary frames emitted as `audio`; `sendAudio` sends the underlying buffer slice; close code
   exposed; unknown event types ignored with a console warning.
-- [ ] 3.6.3 Run → FAIL. Implement (the worklet is ~20 lines: `process(inputs)` posts
+- [x] 3.6.3 Run → FAIL. Implement (the worklet is ~20 lines: `process(inputs)` posts
   `inputs[0][0].slice()` when present; returns `true`). Run → PASS.
-- [ ] 3.6.4 Commit: `feat(web): add audio capture, playback and voice socket libraries`
+- [x] 3.6.4 Commit: `feat(web): add audio capture, playback and voice socket libraries`
 
 **Pitfalls:** `AudioContext` must be created/resumed inside a user gesture; `slice()` the worklet
 buffer (it's reused); binary WebSocket frames need `binaryType = "arraybuffer"`.
@@ -614,3 +614,32 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   changes were needed (`ReportOut.voice_metrics`, `FeedbackReport.voice_metrics`, and
   `SkillScore.rubric_version` were already nullable/present from Phase 2), so `make gen-client`
   produced no diff. Follow-ups: none.
+
+- 2026-09-24 · Task 3.6 · commit &lt;pending&gt; · `make check` ✅ (316 api + 62 web passed, 17 new
+  audio-lib unit tests) · Notes: only `pcm.ts` (pure) and `voice-socket.ts` got dedicated unit
+  tests per the task's own file map — `mic-capture.ts` and `pcm-player.ts` wrap
+  `getUserMedia`/`AudioContext`/`AudioWorkletNode`, which jsdom doesn't implement meaningfully, so
+  they're implemented per the architecture doc's §1 description and left for Task 3.7.4's real
+  browser check rather than faked with a brittle DOM mock. `int16ToFloat32`'s return type needed
+  an explicit `Float32Array<ArrayBuffer>` annotation (not the bare `Float32Array` alias) —
+  TypeScript 5's generic-`TypedArray` change means an unparameterized return-type annotation widens
+  to `Float32Array<ArrayBufferLike>`, which `AudioBuffer.copyToChannel` in `pcm-player.ts` then
+  rejects (`SharedArrayBuffer` isn't assignable to `ArrayBuffer`) even though the value constructed
+  inside the function is concretely `ArrayBuffer`-backed. `VoiceClientMessage`/`VoiceServerJsonEvent`
+  added to `src/lib/api/events.ts` by hand-transcribing `app/voice/protocol.py`'s discriminated
+  unions (not code-generated — these are WS frames, outside the OpenAPI/`openapi-typescript`
+  pipeline that covers `MessageOut` etc.), reusing the already-generated
+  `components["schemas"]["VoiceInputMode"]` for `start.input_mode` the same way `events.ts`
+  already reuses `MessageRole`/`MessageSource` for `ChatStreamEvent`; `voice-socket.ts` then unions
+  in the binary `{ type: "audio"; data: ArrayBuffer }` case, which has no JSON counterpart.
+  `VoiceSocket` validates only the `type` discriminator at runtime (via a `Set` of known type
+  strings) before trusting the rest of the parsed JSON's shape — matches the zero-deep-validation
+  precedent already set by `postSse`/`ChatStreamEvent` for SSE frames, not a new pattern.
+  `sendAudio` explicitly re-slices to `chunk.byteOffset`/`chunk.byteLength` rather than handing the
+  `Int16Array` straight to `ws.send()`, so a chunk that's a view into a larger shared buffer (as
+  `PcmChunker` could produce) never leaks the buffer's other contents over the wire. The capture
+  worklet writes no output samples, so `workletNode.connect(audioContext.destination)` is safe
+  (silent) and only exists to keep the node in the active render graph — without a path to
+  `destination`, `process()` would never be called. `PcmPlayer`/`MicCapture` are `AudioSink`/
+  `AudioSource` per the task's binding interfaces, ready for Task 3.7's `useVoiceSession` hook to
+  inject fakes of. Follow-ups: none.
