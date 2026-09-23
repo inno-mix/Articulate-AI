@@ -584,7 +584,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   docstring — but a reasonable, harmless, backward-compatible widening either way).
   Follow-ups: none.
 
-- 2026-09-24 · Task 3.5 · commit &lt;pending&gt; · `make check` ✅ (316 api + 45 web passed, 5 new
+- 2026-09-24 · Task 3.5 · commit 977c359 · `make check` ✅ (316 api + 45 web passed, 5 new
   integration tests in `tests/integration/services/test_feedback_voice.py`, 3 new unit tests in
   `test_scoring.py`, 1 new unit test in `test_prompts.py`) · Notes: `FeedbackAnalysis.scores` (the
   LLM's own output type) is typed with the narrow `LLMDimension` Literal and has no "fluency"
