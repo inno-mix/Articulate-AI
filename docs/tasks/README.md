@@ -13,7 +13,7 @@
 | 0 | [Foundations](q1-phase-00-foundations.md) | Q1 | – | Done (2026-09-17) |
 | 1 | [Text practice](q1-phase-01-text-practice.md) | Q1 | 0 | Done (2026-09-18) |
 | 2 | [Feedback engine](q1-phase-02-feedback-engine.md) | Q1 | 1 | Done (2026-09-22) |
-| 3 | [Voice practice](q1-phase-03-voice.md) | Q1 | 2 · Deepgram key | In progress (Task 3.5) |
+| 3 | [Voice practice](q1-phase-03-voice.md) | Q1 | 2 · Deepgram key | In progress (Task 3.7) |
 | 4 | [Pronunciation practice](q1-phase-04-pronunciation.md) | Q1 | 0, 3 (audio libs, TTS) · Azure key | Not started |
 | 5 | [Progress, assessment, coach memory](q1-phase-05-progress.md) | Q1 | 2, 3, 4 | Not started |
 | 6 | [Writing coach, custom scenarios, drills, settings](q1-phase-06-more-practice.md) | Q1 | 5 | Not started |
