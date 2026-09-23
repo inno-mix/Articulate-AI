@@ -2,10 +2,12 @@
 
 import re
 from string import punctuation
+from uuid import UUID
 
 from app.llm.outputs import GrammarFixOut, HighlightOut
 from app.models import Message
-from app.schemas.json_types import GrammarFix, Highlight
+from app.schemas.json_types import GrammarFix, Highlight, SpeechData
+from app.voice.metrics import LOW_CONFIDENCE
 
 _MIN_QUOTE_CHARS = 3
 # Curly quotes by codepoint (left/right single U+2018/2019, left/right double U+201C/201D) to
@@ -49,13 +51,35 @@ def filter_highlights(items: list[HighlightOut], user_messages: list[Message]) -
     return filtered
 
 
+def _quote_has_low_confidence_word(quote: str, speech: SpeechData) -> bool:
+    """Whether any word in `quote` matches a word the STT was < `LOW_CONFIDENCE` sure of."""
+    quote_words = {normalise_text(word) for word in quote.split()} - {""}
+    return any(
+        word.confidence < LOW_CONFIDENCE and normalise_text(word.word) in quote_words
+        for word in speech.words
+    )
+
+
 def filter_grammar_fixes(
-    items: list[GrammarFixOut], user_messages: list[Message]
+    items: list[GrammarFixOut],
+    user_messages: list[Message],
+    *,
+    speech_by_message: dict[UUID, SpeechData] | None = None,
 ) -> list[GrammarFix]:
-    """Keep only grammar fixes whose `original` is actually in a user message."""
+    """Keep only grammar fixes whose `original` is actually in a user message.
+
+    For voice turns, also drops a fix whose `original` uses a word the STT was unsure about
+    (`speech_by_message`, keyed by message id) — a "grammar fix" built on a possible
+    mis-transcription isn't trustworthy feedback.
+    """
+    speech_by_message = speech_by_message or {}
     filtered: list[GrammarFix] = []
     for item in items:
-        if find_quote_message(item.original, user_messages) is None:
+        message = find_quote_message(item.original, user_messages)
+        if message is None:
+            continue
+        speech = speech_by_message.get(message.id)
+        if speech is not None and _quote_has_low_confidence_word(item.original, speech):
             continue
         filtered.append(
             GrammarFix(

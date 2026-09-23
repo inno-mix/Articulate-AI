@@ -1,5 +1,6 @@
 """Plain factory functions for test data."""
 
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
@@ -96,6 +97,7 @@ async def make_message(
     role: MessageRole = MessageRole.USER,
     content: str = "Hello.",
     source: MessageSource = MessageSource.TEXT,
+    speech: dict[str, Any] | None = None,
 ) -> Message:
     max_seq = await db.scalar(select(func.max(Message.seq)).where(Message.session_id == session.id))
     message = Message(
@@ -104,6 +106,7 @@ async def make_message(
         role=role,
         content=content,
         source=source,
+        speech=speech,
     )
     db.add(message)
     await db.flush()

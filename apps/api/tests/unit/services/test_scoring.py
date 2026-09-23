@@ -5,6 +5,7 @@ import pytest
 from app.domain.enums import MessageRole, MessageSource
 from app.llm.outputs import GrammarFixOut, HighlightOut
 from app.models import Message
+from app.schemas.json_types import SpeechData, SpeechWord
 from app.services.scoring import (
     filter_grammar_fixes,
     filter_highlights,
@@ -80,6 +81,53 @@ def test_filter_grammar_fixes_drops_unmatched_original() -> None:
 
     assert len(filtered) == 1
     assert filtered[0].original == "I am agree"
+
+
+def test_filter_grammar_fixes_drops_fix_with_low_confidence_word() -> None:
+    message = _user_message("I am agree with this change.")
+    speech = SpeechData(
+        words=[
+            SpeechWord(word="i", start=0.0, end=0.1, confidence=0.95, is_filler=False),
+            SpeechWord(word="am", start=0.1, end=0.2, confidence=0.90, is_filler=False),
+            SpeechWord(word="agree", start=0.2, end=0.3, confidence=0.40, is_filler=False),
+            SpeechWord(word="with", start=0.3, end=0.4, confidence=0.95, is_filler=False),
+        ],
+        duration_s=0.4,
+        stt_model="nova-3",
+    )
+    items = [GrammarFixOut(original="I am agree", corrected="I agree", explanation="verb form")]
+
+    filtered = filter_grammar_fixes(items, [message], speech_by_message={message.id: speech})
+
+    assert filtered == []
+
+
+def test_filter_grammar_fixes_keeps_fix_with_high_confidence_words() -> None:
+    message = _user_message("I am agree with this change.")
+    speech = SpeechData(
+        words=[
+            SpeechWord(word="i", start=0.0, end=0.1, confidence=0.95, is_filler=False),
+            SpeechWord(word="am", start=0.1, end=0.2, confidence=0.90, is_filler=False),
+            SpeechWord(word="agree", start=0.2, end=0.3, confidence=0.85, is_filler=False),
+        ],
+        duration_s=0.3,
+        stt_model="nova-3",
+    )
+    items = [GrammarFixOut(original="I am agree", corrected="I agree", explanation="verb form")]
+
+    filtered = filter_grammar_fixes(items, [message], speech_by_message={message.id: speech})
+
+    assert len(filtered) == 1
+    assert filtered[0].original == "I am agree"
+
+
+def test_filter_grammar_fixes_without_speech_data_is_unaffected() -> None:
+    message = _user_message("I am agree with this change.")
+    items = [GrammarFixOut(original="I am agree", corrected="I agree", explanation="verb form")]
+
+    filtered = filter_grammar_fixes(items, [message], speech_by_message={})
+
+    assert len(filtered) == 1
 
 
 @pytest.mark.parametrize(("score_5", "expected"), [(1, 0), (2, 25), (3, 50), (4, 75), (5, 100)])

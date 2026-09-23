@@ -324,7 +324,7 @@ filter), `app/llm/prompts/feedback_user.md.j2` (speech-recognition note); Test
 `tests/integration/services/test_feedback_voice.py`, `tests/unit/services/test_scoring.py`.
 
 **Subtasks:**
-- [ ] 3.5.1 Failing tests: voice session with speech on user messages → report has `voice_metrics`,
+- [x] 3.5.1 Failing tests: voice session with speech on user messages → report has `voice_metrics`,
   8 dimension scores (fluency last, reason from `fluency_reason`), overall includes fluency, 8
   `skill_scores`; `speaking_summary` appears in the rendered user prompt (assert via fake LLM
   capturing the prompt); text session unchanged (7 dims, `voice_metrics` null); voice session whose
@@ -334,8 +334,8 @@ filter), `app/llm/prompts/feedback_user.md.j2` (speech-recognition note); Test
   confidence < 0.60 is dropped while one on high-confidence words is kept (unit test on
   `filter_grammar_fixes(..., speech_by_message=...)` — a new keyword-only parameter
   `speech_by_message: dict[UUID, SpeechData] | None = None` added to the Phase 2 function).
-- [ ] 3.5.2 Run → FAIL. Implement. Run → PASS. `make gen-client` if schemas changed.
-- [ ] 3.5.3 Commit: `feat(api): add speaking stats and fluency to voice reports`
+- [x] 3.5.2 Run → FAIL. Implement. Run → PASS. `make gen-client` if schemas changed.
+- [x] 3.5.3 Commit: `feat(api): add speaking stats and fluency to voice reports`
 
 ---
 
@@ -583,3 +583,34 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   reads `websocket.app.state` directly for exception-safety reasons — see `app/api/v1/voice.py`'s
   docstring — but a reasonable, harmless, backward-compatible widening either way).
   Follow-ups: none.
+
+- 2026-09-24 · Task 3.5 · commit &lt;pending&gt; · `make check` ✅ (316 api + 45 web passed, 5 new
+  integration tests in `tests/integration/services/test_feedback_voice.py`, 3 new unit tests in
+  `test_scoring.py`, 1 new unit test in `test_prompts.py`) · Notes: `FeedbackAnalysis.scores` (the
+  LLM's own output type) is typed with the narrow `LLMDimension` Literal and has no "fluency"
+  member, so it can't hold a fluency entry — `generate_report`'s Step 6 now converts each LLM
+  `DimensionScore` into the looser `DimensionScoreOut` (dimension: `str`) before conditionally
+  appending a deterministic fluency `DimensionScoreOut` built from `compute_voice_metrics`, never
+  sent to/from the LLM. Whether a report gets `voice_metrics`/fluency is driven entirely by
+  `speech_by_message` (built from `Message.speech`, keyed by message id) being non-empty — this
+  naturally covers both "text session" and "voice session with no speech data" with one code path,
+  both landing at 7 dims/`voice_metrics=None`. Whether the prompt's "USER lines are transcribed
+  from speech" note appears is a separate, explicit `is_voice_session` flag
+  (`session.mode == PracticeMode.VOICE`) threaded through `build_feedback_prompts` — decoupled from
+  whether speech data happened to be present, so a voice session with no speech data still gets the
+  transcription-error caveat (covered by
+  `test_voice_session_without_speech_data_has_no_fluency`). `filter_grammar_fixes` gained a
+  keyword-only `speech_by_message: dict[UUID, SpeechData] | None = None` param and a
+  `_quote_has_low_confidence_word` helper that drops a grammar fix if any word in its `original`
+  quote matches a word the STT scored below `LOW_CONFIDENCE` (reused from `app.voice.metrics`
+  rather than duplicating the 0.60 threshold) — a "grammar fix" built on a possible
+  mis-transcription isn't trustworthy feedback. Each `SkillScore` row for the fluency dimension is
+  saved with `scorer="metrics:v1"` and `rubric_version=None` (it's code, not an LLM/rubric score);
+  the other rows keep `scorer=f"{llm.provider}:{llm.model}"` and the rubric's version, unchanged
+  from Phase 2. Found and fixed one pre-existing test broken by making `is_voice_session` a real
+  template variable under Jinja's `StrictUndefined`: `test_feedback_user_contains_transcript_and_success_criteria`
+  called `render_prompt("feedback_user", ...)` directly without the new kwarg — fixed by passing
+  `is_voice_session=False` explicitly and adding a sibling test for the `True` case. No schema
+  changes were needed (`ReportOut.voice_metrics`, `FeedbackReport.voice_metrics`, and
+  `SkillScore.rubric_version` were already nullable/present from Phase 2), so `make gen-client`
+  produced no diff. Follow-ups: none.

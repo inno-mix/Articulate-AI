@@ -15,7 +15,7 @@ from sqlalchemy.orm import selectinload
 from app.content.rubrics import Rubric, get_rubric
 from app.core.config import Settings
 from app.core.errors import NotFoundError, ReportNotReadyError
-from app.domain.enums import MessageRole, ReportStatus, ScoreSource, UsageKind
+from app.domain.enums import MessageRole, PracticeMode, ReportStatus, ScoreSource, UsageKind
 from app.llm.base import LLMService
 from app.llm.errors import (
     LLMAuthError,
@@ -29,7 +29,7 @@ from app.llm.generation import TEMPERATURE
 from app.llm.outputs import FeedbackAnalysis
 from app.llm.prompts import RenderedPrompt, render_prompt
 from app.models import FeedbackReport, Message, PracticeSession, Profile, Scenario, SkillScore, User
-from app.schemas.json_types import DimensionScoreOut
+from app.schemas.json_types import DimensionScoreOut, SpeechData
 from app.schemas.report import ReportOut, RetryOut
 from app.services.scoring import (
     filter_grammar_fixes,
@@ -39,6 +39,10 @@ from app.services.scoring import (
 )
 from app.services.transcript import build_transcript, format_transcript
 from app.services.usage import record_usage
+from app.voice.metrics import compute_voice_metrics, fluency_reason
+from app.voice.metrics import speaking_summary as summarise_speaking
+
+FLUENCY_SCORER = "metrics:v1"
 
 log = structlog.get_logger(__name__)
 
@@ -74,6 +78,7 @@ def build_feedback_prompts(
     rubric: Rubric,
     transcript_text: str,
     speaking_summary: str | None,
+    is_voice_session: bool = False,
 ) -> tuple[RenderedPrompt, RenderedPrompt]:
     system = render_prompt("feedback_system", learner=_learner_context(profile), rubric=rubric)
     user = render_prompt(
@@ -81,6 +86,7 @@ def build_feedback_prompts(
         scenario=_scenario_context(scenario),
         transcript_text=transcript_text,
         speaking_summary=speaking_summary,
+        is_voice_session=is_voice_session,
     )
     return system, user
 
@@ -205,12 +211,24 @@ async def generate_report(
         rubric = get_rubric(scenario.rubric_version)
         lines, truncated = build_transcript(messages)
         transcript_text = format_transcript(lines, scenario.persona["name"], truncated)
+
+        speech_by_message: dict[UUID, SpeechData] = {
+            m.id: SpeechData.model_validate(m.speech)
+            for m in messages
+            if m.role == MessageRole.USER and m.speech is not None
+        }
+        voice_metrics = (
+            compute_voice_metrics(list(speech_by_message.values())) if speech_by_message else None
+        )
+        is_voice_session = session.mode == PracticeMode.VOICE
+
         system_prompt, user_prompt = build_feedback_prompts(
             scenario=scenario,
             profile=user.profile,
             rubric=rubric,
             transcript_text=transcript_text,
-            speaking_summary=None,
+            speaking_summary=summarise_speaking(voice_metrics) if voice_metrics else None,
+            is_voice_session=is_voice_session,
         )
         session_purpose = session.purpose
 
@@ -234,10 +252,23 @@ async def generate_report(
 
     # Step 6: deterministic post-processing (code, not the LLM — ai-layer.md §7).
     scores_by_dimension = {s.dimension: s for s in analysis.scores}
-    ordered_scores = [scores_by_dimension[d.key] for d in rubric.dimensions]
+    ordered_scores = [
+        DimensionScoreOut(dimension=s.dimension, score=s.score, reason=s.reason)
+        for s in (scores_by_dimension[d.key] for d in rubric.dimensions)
+    ]
+    if voice_metrics is not None:
+        ordered_scores.append(
+            DimensionScoreOut(
+                dimension="fluency",
+                score=voice_metrics.fluency_score,
+                reason=fluency_reason(voice_metrics),
+            )
+        )
     user_messages = [m for m in messages if m.role == MessageRole.USER]
     highlights = filter_highlights(analysis.highlights, user_messages)
-    grammar_fixes = filter_grammar_fixes(analysis.grammar_fixes, user_messages)
+    grammar_fixes = filter_grammar_fixes(
+        analysis.grammar_fixes, user_messages, speech_by_message=speech_by_message
+    )
     overall = overall_score([s.score for s in ordered_scores])
     scorer = f"{llm.provider}:{llm.model}"
 
@@ -251,16 +282,12 @@ async def generate_report(
         report.overall_score = overall
         report.objective_met = analysis.objective_met
         report.summary = analysis.summary
-        report.dimension_scores = [
-            DimensionScoreOut(dimension=s.dimension, score=s.score, reason=s.reason).model_dump(
-                mode="json"
-            )
-            for s in ordered_scores
-        ]
+        report.dimension_scores = [s.model_dump(mode="json") for s in ordered_scores]
         report.strengths = analysis.strengths
         report.improvements = analysis.improvements
         report.highlights = [h.model_dump(mode="json") for h in highlights]
         report.grammar_fixes = [g.model_dump(mode="json") for g in grammar_fixes]
+        report.voice_metrics = voice_metrics.model_dump(mode="json") if voice_metrics else None
         report.rubric_version = rubric.version
         report.prompt_version = system_prompt.version
         report.llm_provider = llm.provider
@@ -270,6 +297,7 @@ async def generate_report(
 
         await db.execute(delete(SkillScore).where(SkillScore.session_id == session_id))
         for dimension_score in ordered_scores:
+            is_fluency = dimension_score.dimension == "fluency"
             db.add(
                 SkillScore(
                     user_id=user_id,
@@ -278,8 +306,8 @@ async def generate_report(
                     source=ScoreSource.SESSION,
                     purpose=session_purpose,
                     session_id=session_id,
-                    scorer=scorer,
-                    rubric_version=rubric.version,
+                    scorer=FLUENCY_SCORER if is_fluency else scorer,
+                    rubric_version=None if is_fluency else rubric.version,
                 )
             )
         await record_usage(

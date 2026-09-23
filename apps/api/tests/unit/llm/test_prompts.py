@@ -131,8 +131,25 @@ def test_feedback_user_contains_transcript_and_success_criteria() -> None:
         },
         transcript_text="[0] PERSONA (Sam): Hi!\n[1] USER: Hi Sam, thanks for the PR.",
         speaking_summary=None,
+        is_voice_session=False,
     )
 
     assert "Hi Sam, thanks for the PR." in rendered.text
     assert "Names both problems" in rendered.text
     assert "Uses a kind tone" in rendered.text
+
+
+def test_feedback_user_voice_session_notes_transcription_errors() -> None:
+    rendered = render_prompt(
+        "feedback_user",
+        scenario={
+            "title": "Give code review feedback",
+            "user_objective": "Explain two problems kindly.",
+            "success_criteria": ["Names both problems"],
+        },
+        transcript_text="[0] PERSONA (Sam): Hi!\n[1] USER: Hi Sam, thanks for the PR.",
+        speaking_summary=None,
+        is_voice_session=True,
+    )
+
+    assert "transcribed from speech" in rendered.text
