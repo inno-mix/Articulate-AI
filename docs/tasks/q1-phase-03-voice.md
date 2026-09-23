@@ -547,7 +547,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   Follow-ups: none — `deepgram-sdk` still at 5.3.4 (latest 5.x on PyPI as of this check), so the
   raw-websocket workaround stays necessary.
 
-- 2026-09-24 · Task 3.4 · commit &lt;pending&gt; · `make check` ✅ (307 api + 45 web passed, 17 new
+- 2026-09-24 · Task 3.4 · commit 3817f80 · `make check` ✅ (307 api + 45 web passed, 17 new
   WS integration tests); manual check ✅ (real Deepgram + Ollama via a temporary `dev:api-worker`
   server: full push-to-talk turn over `WS /sessions/{id}/voice` using
   `tests/fixtures/audio/hello_um.wav` — transcript saved with filler flags intact
