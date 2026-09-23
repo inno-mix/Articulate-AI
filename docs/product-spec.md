@@ -221,8 +221,11 @@ Each feature lists its phase (see `docs/tasks/README.md`).
 
 ### F12. Settings (Phase 6)
 - Practice: default mode (text/voice), voice input style (push-to-talk/hands-free), AI voice
-  (curated list of 6 Aura-2 voices) with preview, AI speaking speed (only if Deepgram supports it —
-  confirmed in the Phase 3 spike), microphone test (level meter).
+  (curated list of 6 Aura-2 voices) with preview, microphone test (level meter). **No AI speaking
+  speed setting**: the Phase 3 spike (ADR-0013) confirmed Deepgram's `speed` parameter only works
+  on the REST TTS endpoint (used for the voice preview), not on the `speak.v1` WebSocket that
+  streams audio during a live voice session — so a speed setting couldn't affect the thing it
+  would be for. The voice preview itself still plays at normal speed.
 - "About your data": what is stored locally and which services receive audio/text.
 - Q2 adds: profile (Phase 7), reminders on/off + time and weekly summary on/off (Phase 8), AI keys
   (Phase 9).
@@ -293,10 +296,12 @@ Azure free tier: 5 audio hours/month, 1 concurrent request — fine for developm
 
 ## 9. Open items (non-blocking)
 
-- Deepgram STT model choice (Flux vs Nova-3) — decided by the Phase 3 spike.
+- Deepgram STT model choice (Flux vs Nova-3) — decided by the Phase 3 spike: **Nova-3**
+  (ADR-0013; Flux has no filler-word feature and didn't reach `EndOfTurn` in testing).
 - Azure integration style (REST short-audio vs Speech SDK) — decided by the Phase 4 spike.
 - Final Ollama model (`llama3.2:latest` vs `qwen3:4b`) and the cloud reference provider/model —
   decided in Phase 2 (Task 2.5).
-- Deepgram TTS speed control availability — checked in the Phase 3 spike; the speed setting is
-  hidden if unsupported.
+- Deepgram TTS speed control availability — checked in the Phase 3 spike (ADR-0013): works on
+  REST only, not the live WebSocket, so the speaking-speed setting is dropped (F12) rather than
+  hidden.
 - Production email sender (e.g. Amazon SES) and hosting — decided after Q2.

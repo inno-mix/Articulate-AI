@@ -94,16 +94,28 @@ any ──end_session / limit / fatal error──► closed
 
 ### 2.5 Turn pipeline
 1. **STT:** one Deepgram streaming connection per user turn (opened on `listening`, closed at end of
-   turn) to keep costs low and avoid idle timeouts. Params (Nova-3 path):
-   `model=nova-3, language=en-US, encoding=linear16, sample_rate=16000, channels=1,
+   turn) to keep costs low and avoid idle timeouts. **Decided by the Phase 3 spike (ADR-0013):
+   Nova-3** — `model=nova-3, language=en-US, encoding=linear16, sample_rate=16000, channels=1,
    interim_results=true, punctuate=true, smart_format=true, filler_words=true,
    endpointing=<ms>, utterance_end_ms=1000, vad_events=true, mip_opt_out=true`, plus `keyterm`
-   for the scenario's technical terms (≤ 20). Flux path uses
-   `client.listen.v2.connect(model="flux-general-en", …, mip_opt_out=true)` and its end-of-turn
-   events. **The spike (Phase 3, Task 3.1) decides which path ships.**
+   for the scenario's technical terms (≤ 20). Flux was rejected: no filler-word feature, and
+   `EndOfTurn` didn't fire within a 3.3s test window on either spike clip.
    Opening the connection takes time: audio chunks that arrive while it is opening are buffered in
    order (max 5 s, oldest dropped beyond that) and sent as soon as it is open, so the first words of
    a turn aren't lost. If opening fails, the turn fails with `speech_unavailable`.
+
+   **`deepgram-sdk` 5.3.4 implementation notes (ADR-0013 — read before writing the adapter):**
+   - The typed `client.listen.v1.connect()` has no `filler_words` kwarg, and
+     `request_options["additional_query_parameters"]` is silently dropped for WebSocket connects
+     (only `additional_headers` reaches the socket). Getting `filler_words=true` onto the wire
+     needs a hand-built `websockets.connect()` call (query string built manually), reusing the
+     SDK's typed response models (`deepgram.extensions.types.sockets`) to parse incoming JSON.
+   - There are no `send_finalize()` / `send_close_stream()` convenience methods. Use
+     `connection.send_control(ListenV1ControlMessage(type="Finalize"))` on `ptt_up`, and
+     `send_control(ListenV1ControlMessage(type="CloseStream"))` to close — both types import from
+     `deepgram.extensions.types.sockets`.
+   - `connection.start_listening()` blocks until the socket closes; run it via
+     `asyncio.create_task(...)` concurrently with sending audio, never `await` it inline.
 2. Final result words → `SpeechWord` list (`is_filler` = Deepgram-tagged filler or token in
    `FILLER_TOKENS`) → saved in `messages.speech`.
 3. **LLM:** `stream_chat` with the voice-mode role-play prompt.
@@ -247,9 +259,14 @@ Every Deepgram request sets `mip_opt_out=true` (ADR-0016, security rule S13): st
 (`listen.v1` and `listen.v2`), pre-recorded STT, the TTS WebSocket and the TTS REST call used for
 previews (`/v1/speak?...&mip_opt_out=true`). Adapters get their shared options from
 `deepgram_request_options() -> dict[str, Any]` in this module instead of repeating the flag, and
-their unit tests assert it. Spike scripts and live tests set it too.
+their unit tests assert it. Spike scripts and live tests set it too. **Confirmed clean in the
+Phase 3 spike (ADR-0013):** `mip_opt_out=true` was set on all five surfaces above with zero errors
+or warnings.
 
 ## 7. Curated TTS voices — `app/voice/voices.py`
-Six Aura-2 English voices, e.g. `aura-2-thalia-en`, `aura-2-asteria-en`, `aura-2-andromeda-en`,
-`aura-2-apollo-en`, `aura-2-arcas-en`, `aura-2-helena-en`. **Verify each id exists** in Deepgram's
-current voice list during the Phase 3 spike; replace any that don't.
+Six Aura-2 English voices: `aura-2-thalia-en`, `aura-2-asteria-en`, `aura-2-andromeda-en`,
+`aura-2-apollo-en`, `aura-2-arcas-en`, `aura-2-helena-en`. **Verified in the Phase 3 spike
+(ADR-0013)** — all six exist and returned audio; none need replacing. First-byte latency over
+`speak.v1` (linear16/24kHz) was ~0.36-0.38s for every voice. A `speed` parameter exists but only
+on the REST `/v1/speak` endpoint (used for previews) — the `speak.v1` streaming WebSocket used for
+live voice sessions has no speed control at all (see `product-spec.md` F12).

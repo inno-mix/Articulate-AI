@@ -117,7 +117,7 @@ curl -s -X PATCH http://localhost:8000/api/v1/me/profile \
 | `EVAL_ANTHROPIC_API_KEY` / `EVAL_OPENAI_API_KEY` / `EVAL_GOOGLE_API_KEY` | *(secret, optional)* | 2 | owner's own key for the eval reference model only; never used by the app; rejected in production |
 | `STT_PROVIDER` / `TTS_PROVIDER` | `deepgram` | 3 | or `fake` |
 | `DEEPGRAM_API_KEY` | *(secret)* | 3 | |
-| `DEEPGRAM_STT_MODEL` | `nova-3` | 3 | or `flux-general-en` after the spike |
+| `DEEPGRAM_STT_MODEL` | `nova-3` | 3 | decided by the Phase 3 spike — ships as `nova-3` (ADR-0013) |
 | `DEEPGRAM_TTS_VOICE` | `aura-2-thalia-en` | 3 | default voice |
 | `PRONUNCIATION_PROVIDER` | `azure` | 4 | or `fake` |
 | `AZURE_SPEECH_KEY` | *(secret)* | 4 | |

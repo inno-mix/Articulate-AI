@@ -78,28 +78,28 @@ not production code.
    without errors or warnings. Every spike script sets it.
 
 **Subtasks:**
-- [ ] 3.1.1 Ask the owner to record two clips on their Mac (QuickTime → New Audio Recording):
+- [x] 3.1.1 Ask the owner to record two clips on their Mac (QuickTime → New Audio Recording):
   (a) a ~15 s stand-up update with a few natural "um/uh", mentioning Kubernetes and PostgreSQL;
   (b) a ~10 s answer ending with a clear 2-second silence. Convert:
   `afconvert -f WAVE -d LEI16@16000 -c 1 in.m4a out.wav`. Store in `apps/api/spikes/deepgram/audio/`
   (git-ignored except the one copied later to `tests/fixtures/audio/hello_um.wav` **with the
   owner's consent**; otherwise generate a fixture with TTS — note TTS audio has no fillers).
-- [ ] 3.1.2 `stt_compare.py`: stream each clip in real time (100 ms chunks with `asyncio.sleep`)
+- [x] 3.1.2 `stt_compare.py`: stream each clip in real time (100 ms chunks with `asyncio.sleep`)
   to Nova-3 and Flux; log all events with timestamps relative to the last audio chunk; print a
   summary table.
-- [ ] 3.1.3 `tts_check.py`: open a speak WebSocket per voice id, send one sentence + flush, measure
+- [x] 3.1.3 `tts_check.py`: open a speak WebSocket per voice id, send one sentence + flush, measure
   first-byte latency and total bytes; try the REST MP3 endpoint; probe a speed parameter.
-- [ ] 3.1.4 Write ADR-0013 with the tables and the decision. Decision rule: prefer the model that
+- [x] 3.1.4 Write ADR-0013 with the tables and the decision. Decision rule: prefer the model that
   returns filler words **and** word timings; if both do, prefer lower end-of-turn latency for
   hands-free; if Flux lacks fillers, choose Nova-3.
-- [ ] 3.1.5 Update `voice-and-pronunciation.md` §2.5/§6/§7, `local-development.md`
+- [x] 3.1.5 Update `voice-and-pronunciation.md` §2.5/§6/§7, `local-development.md`
   (`DEEPGRAM_STT_MODEL` default), `.env.example`, and `product-spec.md` F12/§9 (state whether the
   speaking-speed setting will exist). Tell the owner the result.
 - [ ] 3.1.6 Commit: `docs: record deepgram stt model decision (adr-0013)` (spike scripts may be
   committed under `spikes/` for reference; audio files are not).
 
 **Acceptance criteria:**
-- [ ] ADR-0013 answers all seven questions with measured evidence.
+- [x] ADR-0013 answers all seven questions with measured evidence.
 
 ---
 
