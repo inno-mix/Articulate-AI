@@ -644,7 +644,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   `AudioSource` per the task's binding interfaces, ready for Task 3.7's `useVoiceSession` hook to
   inject fakes of. Follow-ups: none.
 
-- 2026-09-24 · Task 3.7 · commit &lt;pending&gt; · `make check` ✅ (316 api + 87 web passed, 25 new
+- 2026-09-24 · Task 3.7 · commit 98ed999 · `make check` ✅ (316 api + 87 web passed, 25 new
   web tests: 8 hook, 5 `PttButton`, 5 `VoiceSessionView`, 5 `SpeakingStats`, 2 new `VoiceSocket`
   `onClose` regression tests); real-browser check ✅ — done by the owner, not by me: the built-in
   browser pane blocks `getUserMedia` (confirmed live — clicking "Start voice session" there hit
