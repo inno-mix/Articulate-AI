@@ -7,4 +7,5 @@ export const DIMENSION_LABELS: Record<string, string> = {
   tone: "Tone",
   confidence: "Confidence",
   grammar_vocabulary: "Grammar & vocabulary",
+  fluency: "Fluency",
 };

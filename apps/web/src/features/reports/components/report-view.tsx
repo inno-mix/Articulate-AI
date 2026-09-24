@@ -19,6 +19,7 @@ import { useRetryReport } from "../hooks/use-retry-report";
 import { GrammarTable } from "./grammar-table";
 import { HighlightCard } from "./highlight-card";
 import { SkillRow } from "./skill-row";
+import { SpeakingStats } from "./speaking-stats";
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const MODE_LABEL = { text: "Text", voice: "Voice" } as const;
@@ -149,6 +150,8 @@ function ReadyState({
           </ul>
         </section>
       </div>
+
+      <SpeakingStats metrics={report.voice_metrics} />
 
       {highlights.length > 0 && (
         <section>

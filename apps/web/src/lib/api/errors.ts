@@ -29,6 +29,10 @@ const MESSAGES: Record<string, string> = {
   report_not_ready: "This report can't be retried right now.",
   origin_not_allowed: "This request came from another site, so it was blocked.",
   invalid_host: "Open the app from localhost to use it.",
+  mic_permission_denied:
+    "Microphone access was denied. Open your browser's site settings for localhost:3000, allow the microphone, then reload.",
+  connection_lost: "The voice connection was lost unexpectedly.",
+  speech_unavailable: "Speech recognition isn't reachable right now. Try again in a moment.",
 };
 
 const FALLBACK_MESSAGE = "Something went wrong. Please try again.";

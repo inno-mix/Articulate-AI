@@ -7,7 +7,6 @@ import { ErrorState } from "@/components/error-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useScenario } from "../hooks/use-scenario";
 import { useStartSession } from "../hooks/use-start-session";
@@ -35,6 +34,7 @@ export function ScenarioDetailView({ slug }: { slug: string }) {
 
   const voiceIsPrimary = scenario.recommended_mode === "voice";
   const startingText = startSession.isPending && startSession.variables?.mode === "text";
+  const startingVoice = startSession.isPending && startSession.variables?.mode === "voice";
 
   return (
     <div className="max-w-3xl">
@@ -83,14 +83,14 @@ export function ScenarioDetailView({ slug }: { slug: string }) {
           {startingText && <Loader2Icon className="animate-spin" aria-hidden />}
           Start text practice
         </Button>
-        <Tooltip>
-          <TooltipTrigger render={<span tabIndex={0} className="inline-block" />}>
-            <Button variant={voiceIsPrimary ? "default" : "outline"} disabled>
-              Start voice practice
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top">Voice practice arrives in Phase 3</TooltipContent>
-        </Tooltip>
+        <Button
+          variant={voiceIsPrimary ? "default" : "outline"}
+          disabled={startSession.isPending}
+          onClick={() => startSession.mutate({ scenarioId: scenario.id, mode: "voice" })}
+        >
+          {startingVoice && <Loader2Icon className="animate-spin" aria-hidden />}
+          Start voice practice
+        </Button>
       </div>
     </div>
   );

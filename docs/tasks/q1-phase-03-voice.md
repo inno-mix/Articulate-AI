@@ -435,19 +435,19 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   appears in the skills list.
 
 **Subtasks:**
-- [ ] 3.7.1 Failing hook/component tests with fake `AudioSource`, `AudioSink` and socket:
+- [x] 3.7.1 Failing hook/component tests with fake `AudioSource`, `AudioSink` and socket:
   start sends `start` with the chosen input mode; Space down/up sends `ptt_down`/`ptt_up` once
   (repeat ignored); audio only forwarded while listening; `user_turn`/`assistant_turn` update the
   list; binary audio goes to the sink; state indicator text changes; permission error message;
   unexpected close shows "Connection lost"; `session_ended` shows the report link; `paused` shows
   the continue button, which sends `resume`.
-- [ ] 3.7.2 Failing tests for `SpeakingStats` (renders values, hides when null, wording of the
+- [x] 3.7.2 Failing tests for `SpeakingStats` (renders values, hides when null, wording of the
   hard-to-catch note, "not enough speech" text when `pace_measured` is false).
-- [ ] 3.7.3 Run → FAIL. Implement. Run → PASS. `make lint`.
-- [ ] 3.7.4 Browser check with real Deepgram + Ollama (`make dev`): two PTT turns and two
+- [x] 3.7.3 Run → FAIL. Implement. Run → PASS. `make lint`.
+- [x] 3.7.4 Browser check with real Deepgram + Ollama (`make dev`): two PTT turns and two
   hands-free turns; audio plays smoothly; no echo loop (headphones off test); console clean.
   Record end-of-turn → first audio latency in the completion log.
-- [ ] 3.7.5 Commit: `feat(web): add voice practice session and speaking stats`
+- [x] 3.7.5 Commit: `feat(web): add voice practice session and speaking stats`
 
 ---
 
@@ -643,3 +643,42 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   `destination`, `process()` would never be called. `PcmPlayer`/`MicCapture` are `AudioSink`/
   `AudioSource` per the task's binding interfaces, ready for Task 3.7's `useVoiceSession` hook to
   inject fakes of. Follow-ups: none.
+
+- 2026-09-24 · Task 3.7 · commit &lt;pending&gt; · `make check` ✅ (316 api + 87 web passed, 25 new
+  web tests: 8 hook, 5 `PttButton`, 5 `VoiceSessionView`, 5 `SpeakingStats`, 2 new `VoiceSocket`
+  `onClose` regression tests); real-browser check ✅ — done by the owner, not by me: the built-in
+  browser pane blocks `getUserMedia` (confirmed live — clicking "Start voice session" there hit
+  the mic-permission-denied path for real, which is a genuine, valuable confirmation of that error
+  path end-to-end in a real browser, but no browser automation can produce actual speech for
+  Deepgram to transcribe). Owner ran both modes on `make dev` with real Deepgram + Ollama: two PTT
+  turns and two hands-free turns, audio played smoothly, no echo (tested without headphones),
+  console stayed clean, end-of-turn → first audio latency ~2-3s. Notes: split `SessionView` into a
+  thin mode-dispatcher (fetches session+scenario once, shows the shared loading/error states) plus
+  a new `TextSessionView` (the old body, unchanged) and `VoiceSessionView`, so a voice session never
+  calls the text-only hooks (`useChatStream`, `useHint`, `useEndSession`) — mixing those in behind a
+  conditional return would have been a Rules-of-Hooks violation anyway. Extended `VoiceSocket`
+  (Task 3.6) with an `onClose(cb)` subscription — its Task 3.6 interface only exposed a `closeCode`
+  property, but "unexpected close shows Connection lost" needs a reactive callback, so this is a
+  small, justified extension of code from the same phase rather than a hook-level poll of
+  `closeCode`; covered by two new regression tests in the existing `voice-socket.test.ts`.
+  `useVoiceSession`'s `start()` and `reconnect()` are the same internal `connect()` function under
+  two names — both need to do the identical ensure-mic → resume-sink → open-socket → send `start`
+  sequence, so there was no real behavioural difference to preserve by keeping them separate.
+  Distinguishing a graceful shutdown from a dropped connection (both end in the socket's `close`
+  event, since the server always closes after `session_ended` too) uses one `expectingCloseRef`
+  flag set before any client-initiated or server-acknowledged close; an unflagged close is what
+  triggers `connection_lost`.
+  `src/features/settings/{api,hooks/use-settings}.ts` added as a minimal read-only wrapper around
+  the already-existing `GET /api/v1/settings` endpoint (Phase 0/1 backend, never previously
+  consumed by the web app) — just enough for the voice start screen's default input-mode toggle;
+  no settings *page* exists yet, out of scope here. `NEXT_PUBLIC_WS_URL` had been sitting unused in
+  `.env.example`/`vitest.config.mts` since Phase 0 scaffolding; `WS_URL`/`WS_ORIGIN` added to
+  `src/lib/env.ts` mirroring `API_URL`/`API_ORIGIN`'s exact convention (origin-only, callers supply
+  the full `/api/v1/...` path). Enabled "Start voice practice" on the scenario detail page (was a
+  disabled button with a "Voice practice arrives in Phase 3" tooltip since Phase 1); fixed the one
+  pre-existing test that asserted the old disabled state, replacing it with a real
+  start-voice-session-and-navigate test mirroring the existing text-session one. `fluency` added to
+  `DIMENSION_LABELS` so the deterministic dimension from Task 3.5 renders as "Fluency" instead of
+  the raw key in the skills list — the only change `report-view.tsx` needed beyond mounting
+  `<SpeakingStats metrics={report.voice_metrics} />`. Follow-ups: none — the owner's live-audio
+  check above covers 3.7.4 in full.

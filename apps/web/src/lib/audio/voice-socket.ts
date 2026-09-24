@@ -32,6 +32,7 @@ function isKnownEvent(value: unknown): value is VoiceServerJsonEvent {
 export class VoiceSocket {
   private ws: WebSocket | null = null;
   private readonly listeners = new Set<(event: VoiceServerEvent) => void>();
+  private readonly closeListeners = new Set<(code: number | null) => void>();
   closeCode: number | null = null;
 
   constructor(
@@ -48,6 +49,7 @@ export class VoiceSocket {
       ws.onmessage = (event) => this.handleMessage(event);
       ws.onclose = (event) => {
         this.closeCode = event.code;
+        for (const listener of this.closeListeners) listener(event.code);
       };
       this.ws = ws;
     });
@@ -92,6 +94,11 @@ export class VoiceSocket {
   onEvent(cb: (event: VoiceServerEvent) => void): () => void {
     this.listeners.add(cb);
     return () => this.listeners.delete(cb);
+  }
+
+  onClose(cb: (code: number | null) => void): () => void {
+    this.closeListeners.add(cb);
+    return () => this.closeListeners.delete(cb);
   }
 
   close(): void {

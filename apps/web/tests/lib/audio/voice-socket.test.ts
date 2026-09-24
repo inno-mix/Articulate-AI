@@ -3,41 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { VoiceSocket } from "@/lib/audio/voice-socket";
 import type { VoiceServerEvent } from "@/lib/audio/voice-socket";
 
-class MockWebSocket {
-  static instances: MockWebSocket[] = [];
-
-  url: string;
-  binaryType = "blob";
-  readyState = 0;
-  sent: unknown[] = [];
-  onopen: (() => void) | null = null;
-  onmessage: ((event: { data: unknown }) => void) | null = null;
-  onclose: ((event: { code: number }) => void) | null = null;
-  onerror: (() => void) | null = null;
-
-  constructor(url: string) {
-    this.url = url;
-    MockWebSocket.instances.push(this);
-  }
-
-  send(data: unknown): void {
-    this.sent.push(data);
-  }
-
-  close(code = 1000): void {
-    this.readyState = 3;
-    this.onclose?.({ code });
-  }
-
-  triggerOpen(): void {
-    this.readyState = 1;
-    this.onopen?.();
-  }
-
-  triggerMessage(data: unknown): void {
-    this.onmessage?.({ data });
-  }
-}
+import { MockWebSocket } from "./mock-websocket";
 
 afterEach(() => {
   MockWebSocket.instances = [];
@@ -127,6 +93,27 @@ describe("VoiceSocket", () => {
     mock.close(4409);
 
     expect(socket.closeCode).toBe(4409);
+  });
+
+  it("notifies onClose listeners with the close code", async () => {
+    const { socket, mock } = await connectedSocket();
+    const codes: (number | null)[] = [];
+    socket.onClose((code) => codes.push(code));
+
+    mock.close(1000);
+
+    expect(codes).toEqual([1000]);
+  });
+
+  it("onClose's unsubscribe function stops delivering close notifications", async () => {
+    const { socket, mock } = await connectedSocket();
+    const codes: (number | null)[] = [];
+    const unsubscribe = socket.onClose((code) => codes.push(code));
+
+    unsubscribe();
+    mock.close(1000);
+
+    expect(codes).toEqual([]);
   });
 
   it("onEvent's unsubscribe function stops delivering events", async () => {

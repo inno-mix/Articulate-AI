@@ -98,12 +98,22 @@ describe("ScenarioDetailView", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("disables the voice practice button with an explanatory tooltip", async () => {
+  it("starts a voice session and navigates to it", async () => {
+    const user = userEvent.setup();
     detailReturns(detail());
+    server.use(
+      http.post(`${API}/sessions`, async ({ request }) => {
+        const body = (await request.json()) as { scenario_id: string; mode: string };
+        expect(body.mode).toBe("voice");
+        return HttpResponse.json({ id: "session-2" }, { status: 201 });
+      }),
+    );
 
     renderWithProviders(<ScenarioDetailView slug="explain-tech-debt-to-pm" />);
+    await screen.findByText("Dana");
 
-    const voiceButton = await screen.findByRole("button", { name: "Start voice practice" });
-    expect(voiceButton).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Start voice practice" }));
+
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/sessions/session-2"));
   });
 });
