@@ -16,7 +16,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.enums import MessageRole, PracticeMode, SessionStatus
-from app.domain.limits import HANDS_FREE_IDLE_SECONDS, MAX_USER_TURNS, VOICE_TURN_MAX_SECONDS
+from app.domain.limits import (
+    HANDS_FREE_IDLE_SECONDS,
+    MAX_USER_TURNS,
+    VOICE_SESSION_MAX_SECONDS,
+    VOICE_TURN_MAX_SECONDS,
+)
 from app.llm.base import LLMUsage
 from app.llm.errors import LLMUnavailableError
 from app.models import Message, PracticeSession, UsageEvent, User
@@ -430,6 +435,27 @@ async def test_turn_too_long_is_finalized(
         assert events[-1] == {"type": "limit", "reason": "turn_too_long"}
         idle = await _recv_json(ws)
         assert idle == {"type": "state", "value": "idle"}
+
+
+async def test_session_too_long_ends_the_session(
+    app: FastAPI, db: AsyncSession, local_user: User, clock: FakeClock
+) -> None:
+    session = await _make_voice_session(db, local_user.id)
+
+    async with voice_ws_client(app) as ws_client, aconnect_ws(_ws_url(session.id), ws_client) as ws:
+        await ws.send_text(json.dumps({"type": "start", "input_mode": "push_to_talk"}))
+        await _recv_json(ws)  # ready
+
+        clock.advance(VOICE_SESSION_MAX_SECONDS + 1)
+        events = await _drain_until(ws, "limit")
+        assert events[-1] == {"type": "limit", "reason": "session_too_long"}
+        ended = await _recv_json(ws)
+        # No turns happened in this test, so end_session classifies it as abandoned (no report) —
+        # see MIN_USER_TURNS_FOR_REPORT in app/services/sessions.py.
+        assert ended == {"type": "session_ended", "status": "abandoned", "report_status": None}
+
+    await db.refresh(session)
+    assert session.status == SessionStatus.ABANDONED
 
 
 async def test_usage_events_recorded_for_stt_tts_llm(

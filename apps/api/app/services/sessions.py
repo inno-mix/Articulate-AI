@@ -226,6 +226,7 @@ async def end_session(db: AsyncSession, user_id: UUID, session_id: UUID) -> EndS
             pending_status = report.status
             await enqueue_report(report.id)
             return EndSessionOut(status=session.status, report_status=pending_status)
+        await db.commit()
         return EndSessionOut(status=session.status, report_status=None)
 
     report_status: ReportStatus | None = None

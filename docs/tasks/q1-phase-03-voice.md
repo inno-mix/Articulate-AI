@@ -470,7 +470,8 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
 2. Say something with deliberate "um"s → report shows them; speak very fast → pace flagged.
 3. Disconnect Wi-Fi mid-session → friendly error; reconnect works; session continues.
 4. Deny the mic permission → clear instructions.
-5. 20-minute limit verified with a temporarily lowered limit in a test (not manually).
+5. 20-minute limit verified with a temporarily lowered limit in a test (not manually) — done:
+   `test_session_too_long_ends_the_session` in `apps/api/tests/integration/api/test_voice_ws.py`.
 6. `make check` and `make test-e2e` → PASS. Deepgram usage for the phase noted in the log.
 
 ## Completion log
@@ -704,3 +705,20 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   Chromium, not jsdom. Follow-ups: none — this was the last task in Phase 3; Phase verification
   (the manual real-voice checklist in this file) is still open and is the owner's call on when/how
   to run it before marking the phase Done.
+
+- 2026-09-24 · Phase verification item 5 · commit &lt;pending&gt; · `make check` ✅ (317 api + 87 web
+  passed) · Notes: writing `test_session_too_long_ends_the_session` (mirrors
+  `test_turn_too_long_is_finalized`'s `FakeClock.advance()` pattern) surfaced a real bug, not a
+  test-harness artifact: `sessions_service.end_session()`'s `SessionStatus.ABANDONED` branch (a
+  session with `user_turns < MIN_USER_TURNS_FOR_REPORT` when it ends) only `db.flush()`ed, never
+  `db.commit()`ed — the sibling `ENDED` branch a few lines below explicitly commits, with a comment
+  explaining why ("the worker may pick the job up before this transaction commits otherwise"), but
+  that reasoning applies just as much to the relay's own raw `session_factory()` usage in
+  `_end_session_and_close()` for the ABANDONED case, which has no report to enqueue but still needs
+  its status change to survive past `async with ... as db:` exiting without an explicit commit. The
+  bug was invisible until now because every existing voice-WS test that reaches `end_session()` (the
+  `end_session` message test, `MAX_USER_TURNS` turn-limit test) manually sets `session.user_turns`
+  high enough to take the `ENDED` branch first; the REST endpoint (`POST /sessions/{id}/end`) never
+  hit this either, since its `DbDep`/`get_db` wraps the whole request in its own commit-on-success.
+  Fixed with one `await db.commit()` added to the `ABANDONED` branch, symmetric with `ENDED`'s;
+  harmless to call twice on the REST path (nothing left to flush the second time). Follow-ups: none.
