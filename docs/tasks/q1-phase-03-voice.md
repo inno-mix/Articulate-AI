@@ -454,13 +454,13 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
 ### Task 3.8 — E2E: voice journey
 
 **Files:** `apps/web/e2e/voice-practice.spec.ts`.
-- [ ] 3.8.1 Spec (fake providers, fake mic): open "Daily stand-up update" → "Start voice
+- [x] 3.8.1 Spec (fake providers, fake mic): open "Daily stand-up update" → "Start voice
   practice" → "Start voice session" → hold the talk button 1.5 s (mouse down/up) → user message
   "hello um there" visible → assistant message visible → state returns to "Ready" → **second** PTT
   turn (a report needs ≥ 2 user turns) → End session → View report → "Speaking stats" shows
   2 filler words and "Not enough speech to measure pace yet" (the fake turns are too short to
   measure).
-- [ ] 3.8.2 `make test-e2e` → PASS. Update phase status. Commit:
+- [x] 3.8.2 `make test-e2e` → PASS. Update phase status. Commit:
   `test(web): add voice practice e2e journey`
 
 ## Phase verification
@@ -682,3 +682,25 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   the raw key in the skills list — the only change `report-view.tsx` needed beyond mounting
   `<SpeakingStats metrics={report.voice_metrics} />`. Follow-ups: none — the owner's live-audio
   check above covers 3.7.4 in full.
+
+- 2026-09-24 · Task 3.8 · commit &lt;pending&gt; · `make test-e2e` ✅ (5/5: 2 smoke + 2 text-practice
+  + 1 voice-practice, 23.3s); `make check` ✅ (316 api + 87 web passed) · Notes: the
+  `playwright.config.ts`/`e2e/env.ts` fake-mic infrastructure (`--use-fake-device-for-media-stream`
+  + `--use-file-for-fake-audio-capture=e2e/fixtures/hello.wav`, `STT_PROVIDER=fake`,
+  `TTS_PROVIDER=fake`) was already scaffolded in Phase 0 for exactly this task — no config changes
+  needed, only the spec itself. `FakeSpeechToText`'s default script (`app/voice/fake.py`) always
+  replays "hello um there" with one filler word ("um") and one low-confidence word ("there",
+  confidence 0.55 < `LOW_CONFIDENCE` 0.60) per turn regardless of the fake device's actual audio —
+  two PTT turns therefore give a deterministic `filler_count=2`, `words=4`,
+  `filler_rate_per_100=50.0`, and `pace_measured=false` (2 non-filler words per turn is below
+  `MIN_WORDS_FOR_PACE=3`), which the spec asserts on exactly ("2 (50.0 per 100 words)" and "Not
+  enough speech to measure pace yet") rather than looser matching. One real bug caught on the first
+  run: `getByText("hello um there")` without `exact: true` substring-matches inside the assistant's
+  own reply ("Fake reply to: hello um there"), so after even one turn the locator resolved to 2
+  elements — fixed by adding `{ exact: true }` to the user-message assertion (the assistant-reply
+  assertion already used a scoped regex, no change needed there). PTT press/hold is simulated with
+  real `page.mouse.down()` / `page.waitForTimeout(1500)` / `page.mouse.up()` after `.hover()` on the
+  "Hold to talk" button — this exercises the real `PttButton`'s pointer-capture path in a real
+  Chromium, not jsdom. Follow-ups: none — this was the last task in Phase 3; Phase verification
+  (the manual real-voice checklist in this file) is still open and is the owner's call on when/how
+  to run it before marking the phase Done.
