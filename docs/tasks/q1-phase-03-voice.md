@@ -683,7 +683,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   `<SpeakingStats metrics={report.voice_metrics} />`. Follow-ups: none — the owner's live-audio
   check above covers 3.7.4 in full.
 
-- 2026-09-24 · Task 3.8 · commit &lt;pending&gt; · `make test-e2e` ✅ (5/5: 2 smoke + 2 text-practice
+- 2026-09-24 · Task 3.8 · commit 70279b1 · `make test-e2e` ✅ (5/5: 2 smoke + 2 text-practice
   + 1 voice-practice, 23.3s); `make check` ✅ (316 api + 87 web passed) · Notes: the
   `playwright.config.ts`/`e2e/env.ts` fake-mic infrastructure (`--use-fake-device-for-media-stream`
   + `--use-file-for-fake-audio-capture=e2e/fixtures/hello.wav`, `STT_PROVIDER=fake`,
