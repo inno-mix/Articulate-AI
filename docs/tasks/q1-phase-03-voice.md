@@ -706,7 +706,7 @@ export function useVoiceSession(opts: { sessionId: string; inputMode: "push_to_t
   (the manual real-voice checklist in this file) is still open and is the owner's call on when/how
   to run it before marking the phase Done.
 
-- 2026-09-24 · Phase verification item 5 · commit &lt;pending&gt; · `make check` ✅ (317 api + 87 web
+- 2026-09-24 · Phase verification item 5 · commit 35094e9 · `make check` ✅ (317 api + 87 web
   passed) · Notes: writing `test_session_too_long_ends_the_session` (mirrors
   `test_turn_too_long_is_finalized`'s `FakeClock.advance()` pattern) surfaced a real bug, not a
   test-harness artifact: `sessions_service.end_session()`'s `SessionStatus.ABANDONED` branch (a
